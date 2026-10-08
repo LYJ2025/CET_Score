@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      网络权限说明（重要）：
+
+      本 App 是**单一安装包**，内含两种 AI 评分模式，用户在 AI 助手里切换：
+
+        · 普通模式 —— 生成提示词并复制到剪贴板
+          **全程不发起任何网络请求**，数据不出本机。
+
+        · 专业模式 —— 直连用户自己配置的第三方 AI 接口做流式评分
+          仅在用户**主动切换到专业模式并点击「开始 AI 评分」**后才联网，
+          此时才会把作答内容发送到该接口。
+
+      因此本应用声明 INTERNET 权限 —— 否则专业模式无法工作。
+      权限的授予不等于联网：Android 权限是"允许"而非"强制"，
+      不发请求就不会联网。
+
+      除此之外无任何权限：
+        · 不申请存储权限 —— Room 数据存在应用私有目录
+        · 不申请相机/位置/通讯录等无关权限
+        · 不集成统计、广告、推送等 SDK
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:name=".CetSixApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.CetSixScore">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.CetSixScore"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
