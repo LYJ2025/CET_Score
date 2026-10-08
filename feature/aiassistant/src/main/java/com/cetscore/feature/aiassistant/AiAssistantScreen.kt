@@ -279,7 +279,7 @@ private fun TaskSelectScreen(
                 Text(
                     text = when (task) {
                         ScoringTask.ESSAY -> "120-180 词 / 150-200 词 · 含档位标准与范文"
-                        ScoringTask.TRANSLATION -> "140-160 汉字 / 180-200 汉字 · 含扣分点清单"
+                        ScoringTask.TRANSLATION -> "140-160 词 / 180-200 词 · 含扣分点清单"
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
