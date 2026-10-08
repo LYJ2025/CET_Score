@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.cetsix.feature.history"
+    namespace = "com.cetscore.feature.history"
     compileSdk = 36
     defaultConfig { minSdk = 26 }
 

@@ -1,4 +1,4 @@
-# CetSixScore · 四六级估分助手
+# CET_Score · 四六级估分助手
 
 > **输入你四六级考试的真实对错情况，算出 710 分制的预估总分。**
 >
@@ -89,7 +89,7 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 ## 项目结构
 
 ```
-CetSixScore/
+CET_Score/
 ├── app/                        应用壳：唯一 Activity + NavHost + 依赖容器
 ├── core/
 │   ├── domain/                 纯 Kotlin 估分算法（不依赖 Android）
@@ -462,7 +462,7 @@ DeepSeek / 豆包 / ChatGPT 等任意 AI。
   **不 spawn 任何长生命周期协程**。见 `NumberStepper.kt` 注释
 - **`PointerInputScope` / `AwaitPointerEventScope` 都不是 `CoroutineScope`** ——
   在 `awaitEachGesture` 内无法 `launch`，需改用状态机在事件循环内驱动
-- **`core:data` 的 Room 与 `core:ui` 的 Haze 必须用 `api`** —— 因为 `CetSixDatabase` 继承
+- **`core:data` 的 Room 与 `core:ui` 的 Haze 必须用 `api`** —— 因为 `CetScoreDatabase` 继承
   `RoomDatabase`、`GlassCard` 签名里出现 `HazeState`，用 `implementation` 会导致下游编译失败
 - **`core:domain` 刻意用 `kotlin("jvm")`** 而非 android-library —— 估分是纯计算，
   测试跑得快且不受 minSdk 约束。该模块**不要声明 `jvmToolchain(17)`**

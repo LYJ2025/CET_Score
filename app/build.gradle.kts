@@ -5,14 +5,14 @@ plugins {
 }
 
 android {
-    namespace = "com.cetsix.score"
+    namespace = "com.cetscore.score"
 
     // compileSdk 用 36（Haze/Vico/Room 等库要求），
     // 但 targetSdk 按需求保持 34 —— 两者不冲突，compileSdk 只是编译期 API 面。
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.cetsix.score"
+        applicationId = "com.cetscore.score"
         minSdk = 26          // Android 8.0
         targetSdk = 34
         versionCode = 1

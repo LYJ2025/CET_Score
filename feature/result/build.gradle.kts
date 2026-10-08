@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.cetsix.feature.result"
+    namespace = "com.cetscore.feature.result"
     compileSdk = 36
     defaultConfig { minSdk = 26 }
 

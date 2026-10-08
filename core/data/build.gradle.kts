@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.cetsix.core.data"
+    namespace = "com.cetscore.core.data"
     compileSdk = 36
 
     defaultConfig {
@@ -38,7 +38,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     // Room —— KSP 生成 DAO 实现
-    // 用 api 而非 implementation：CetSixDatabase 继承 RoomDatabase（公开父类），
+    // 用 api 而非 implementation：CetScoreDatabase 继承 RoomDatabase（公开父类），
     // 下游模块直接调用 Room.databaseBuilder()，必须能看到 Room 的类型。
     api(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)

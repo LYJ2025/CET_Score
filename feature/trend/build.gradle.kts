@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.cetsix.feature.trend"
+    namespace = "com.cetscore.feature.trend"
     compileSdk = 36
     defaultConfig { minSdk = 26 }
 

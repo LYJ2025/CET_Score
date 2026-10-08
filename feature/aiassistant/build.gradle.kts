@@ -12,7 +12,7 @@ plugins {
 // 专业模式（API 直连）依赖网络库与 INTERNET 权限，
 // 放在 app 模块的 online sourceSet 里 —— library 模块没有 flavor 概念，无法这样隔离。
 android {
-    namespace = "com.cetsix.feature.aiassistant"
+    namespace = "com.cetscore.feature.aiassistant"
     compileSdk = 36
     defaultConfig { minSdk = 26 }
 

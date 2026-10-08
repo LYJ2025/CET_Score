@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.cetsix.core.ui"
+    namespace = "com.cetscore.core.ui"
     compileSdk = 36
 
     defaultConfig {

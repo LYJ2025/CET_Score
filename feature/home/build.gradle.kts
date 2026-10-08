@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.cetsix.feature.home"
+    namespace = "com.cetscore.feature.home"
     compileSdk = 36
     defaultConfig { minSdk = 26 }
 

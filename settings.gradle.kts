@@ -22,7 +22,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CetSixScore"
+rootProject.name = "CET_Score"
 
 include(":app")
 
