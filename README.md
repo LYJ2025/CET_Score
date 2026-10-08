@@ -365,6 +365,11 @@ DeepSeek / 豆包 / ChatGPT 等任意 AI。
 需要先在设置里填 API Key、Base URL、模型名（支持任何 OpenAI 兼容接口，
 默认 `https://api.deepseek.com/v1` + `deepseek-chat`）。
 
+![API 设置弹窗：填写 API Key、Base URL 与模型名](docs/images/10-AI助手-API设置.png)
+
+*专业模式的 API 设置弹窗，填写 API Key、Base URL 与模型名（图中信息已做脱敏处理）*
+
+
 ![AI 助手专业模式：输入区与流式输出窗口](docs/images/09-AI助手-专业模式.png)
 
 *专业模式界面：上方原题目与作答输入区 +「开始 AI 评分」，下方 AI 评分过程流式输出窗口*
