@@ -146,16 +146,35 @@
 
 | 中文原文 | 常见错误译法 | 标准译法 |
 |---------|------------|---------|
+| 春节 | Chinese New Year | the Spring Festival |
+| 端午节 | Dragon Boat Day | the Dragon Boat Festival |
+| 中秋节 | Mid-Autumn Day | the Mid-Autumn Festival |
 | 清明节 | Clear Day | Tomb-Sweeping Day / Qingming Festival |
+| 红包 | red bag / red packet | red envelope |
+| 压岁钱 | lucky money（仅译一半） | lucky money for warding off evil spirits |
+| 春联 | spring couplets（缺节日信息） | Spring Festival couplets |
 | 四合院 | four closed yards | siheyuan / a traditional Chinese courtyard house |
+| 故宫 | the ancient palace | the Forbidden City |
+| 颐和园 | the Summer Palace（可接受） | the Summer Palace |
+| 兵马俑 | terracotta warrior（可接受） | the Terracotta Army |
+| 丝绸之路 | Silk Road（正确） | the Silk Road |
 | 京剧 | Beijing Opera | Peking Opera |
+| 儒家思想 | Confucian thought | Confucianism |
+| 书法 | writing（歧义） | calligraphy |
+| 针灸 | needle burning | acupuncture |
+| 太极拳 | tai chi（可接受） | Tai Chi |
+| 剪纸 | paper cutting（可接受） | paper cutting |
+| 农历 | lunar year（可接受） | the lunar calendar |
 | 乡村振兴 | countryside development | rural revitalization |
 | 非遗 | non-legacy | intangible cultural heritage |
-| 丝绸之路 | Silk Road（正确） | Silk Road |
-| 兵马俑 | terracotta warrior（可接受） | Terracotta Army |
+
+**判分要领**：只要用的是**约定俗成的固定译法**即算正确，不要求与上表逐字一致。
+但若用了**自创译法**（如把「针灸」译成 needle burning、把「书法」译成 writing），
+在本级别属「重大语义偏差」，直接从 11 档降至 8 档。
 
 **特别注意**：这些是文化专有名词，误译会被判定为「重大语义偏差」，
-在六级属于直接降档的错误类型。
+在本级别属于直接降档的错误类型。专有名词首字母必须大写
+（beijing、the spring festival 一律判错）。
 
 ### 中式英语与机械直译（每处扣 1-2 分，多处出现直接降档）
 
@@ -206,59 +225,98 @@
 
 ---
 
-## 五、核心难点与得分方法（名师教研补充）
+## 五、评卷判读方法（阅卷实操）
 
-### 1. 核心难点是中文句式
+本章不是给考生的翻译建议，而是**给你（评卷 AI）的判读方法**。
 
-本级别译文的失分点主要集中在中文句式的处理上：**四字格要拆**，
-**无主句要补主语或改用被动**，**时间年代要按英文习惯重排**。
-中文重"意合"，靠语义隐性衔接；英文重"形合"，依赖显性逻辑信号。
-例如中文"作为国家战略性新兴产业，无人机正逐步演变为智能助手"，
-修饰成分堆在前面而主语被挤到后面；英文应先把主干 drones are evolving into assistants 提出来，
-再把"作为……"处理成句首状语。
-（来源：新东方六级教研）
+### 1. 先给中文原文逐句编号
 
-### 2. 三步拆句法
+翻译评卷必须逐句对照。评分前先把中文原文拆成编号的句子
+（例如 S1、S2、S3……），再逐句检查译文：
 
-第一步**砍修饰**，把所有"的"字定语、"在……中""作为……"这类介词短语先划到一边；
-第二步**补主干**，只留最核心的主谓宾；第三步**回填修饰**，按英语习惯把状语和定语放回正确位置。
-彭叶老师强调"意群翻译"，不纠结逐字对应，追求整体表达自然流畅。
-（来源：新东方彭叶老师）
+- 该句是否找到了对应译文？
+- 该句的核心名词、数字、时间、逻辑关系是否都译出？
+- 该句是否被合并到相邻句、或被拆得太碎？
 
-### 3. 意群切分法 + 句式重构法
+没有编号就无法判断"漏译了哪一句"，只能凭整体印象给分——这是最常见的误判来源。
 
-**意群切分法**：把长难句按语义切成若干意群，先拆分再翻译，避免整句硬译造成逻辑混乱。
-**句式重构法**：通过主动转被动、改写无主句、重组因果逻辑来贴合英文表达习惯——
-例如"人们把端午节称为诗人节"应转为被动 The Dragon Boat Festival is called the Poets' Day。
-**词性转换法**：把中文动词转为英文名词，句子会更稳，例如把"改善"用名词 improvement 承接。
-（来源：石教旺老师）
+### 2. 按「句子正确数」定档（不要凭整体印象）
 
-### 4. 14 分档与 8 分档的核心差距
+逐句判断每个句子是否**正确或基本正确**（意思对、没有严重语法错误即可），
+再按数量对照下表定档：
 
-14 分档要求准确表达原意、用词贴切、行文流畅；8 分档则是勉强连贯、
-语言错误较多并含若干严重语言错误。
-档与档的落差，很多时候卡在**连贯与地道**上，而不是词汇量——
-用词并不生僻，但句子之间缺少衔接信号，落在 8 分档；词汇普通，
-但用定语从句把因果关系理清，则可落到 14 分档。
-（来源：六级翻译评分样卷分析）
+| 档位 | 句子正确数 / 错误数 |
+|:---|:---|
+| **14 分档（13-15）** | 2 处 / 5 处 / 7 处不明显小错（冠词、单复数、时态、介词、用词不贴切） |
+| **11 分档（10-12）** | 1 个严重错句，或 3 处明显语言错误 → 11 分；4 处 → 10 分 |
+| **8 分档（7-9）** | 5 个句子正确或基本正确 → 9 分；4 个 → 8 分；3 个 → 7 分 |
+| **5 分档（4-6）** | 内容基本表达 + 2 个句子正确 → 6 分；1 个 → 5 分；无完全正确句但有 3 处小错 → 4 分 |
+| **2 分档（1-3）** | 内容基本表达但所有句子都有错误；严重错误极多 → 2 分；严重错误多 → 1 分 |
+| **0 分** | 未作答、只有几个孤立词、或译文与原文毫不相关 |
 
-### 5. "三眼"阅卷法
+「小错」指不影响理解的错误；「明显语言错误」指语法或搭配错误；
+「严重错句」指主谓不一致、双谓语、整句不成话。
 
-**第一眼**看开篇是否规范：高分译文的第一句话通常准确传达段落主题，开篇跑题会直接压档。
-**第二眼**看主语是否统一、时态是否协调：一段话里主语从 people 跳到 it 再跳到 we 会拉低流畅度，
-时态在历史与现状之间来回跳变同样如此。
-**第三眼**看有没有亮眼词组：例如用 which embodies the philosophy of... 这类定语从句体现因果逻辑。
-（来源：新东方）
+### 3. 「信」的三层判读：漏译比错译更致命
 
-### 6. 高频扣分点补充
+**第一层 核心信息不漏译**：原文每句的核心意思必须传达，
+包括关键名词、数字、时间、逻辑关系。
+例如原文「5000 多年的历史」必须译出 over 5,000 years，
+不能简化成 a long history。
 
-**文化负载词误译高频发生**，且专有名词首字母必须大写，小写会被直接判为错误。
-**时态需统一**：涉及历史用一般过去时，涉及现状和惯例用一般现在时，
-一段里混用多种时态是翻译掉档的常见原因。
-**单复数误用、介词搭配不当**每处扣 0.5-1 分，**累计 3 处及以上额外扣 1 分**。
-（来源：六级翻译常见错误统计）
+**第二层 关键术语用固定译法**：不能自创。
+例如「春节」译 the Spring Festival 而非 Chinese New Year；
+「故宫」译 the Forbidden City 而非 the ancient palace；
+「儒家思想」译 Confucianism。
 
----
+**第三层 不添加原文没有的信息**：原文只说「故宫」二字，
+不要擅自加the world-famous——增译同样扣分。
+
+### 4. 三个高频漏译点（AI 最容易漏判的地方）
+
+**漏译修饰语**：原文「历史悠久的文化」漏掉「历史悠久」只写 culture；
+「最重要的因素之一」漏掉「之一」。修饰语不影响主干，但缺失会改变信息精确度。
+
+**漏译逻辑关系词**：原文「由于……因此……」若译成两个并列简单句，
+逻辑就断裂了。正确做法是用 due to / therefore / as a result 明确因果。
+注意：逻辑断裂属整句不通，每处扣 2 分，比单词错更严重。
+
+**术语自创**：找不到固定译法时，用解释性译法传达意思，
+但不要硬凑一个错误的专有名词。
+
+### 5. 句子层面的判读：逐句检查四件事
+
+对每个译文句检查：
+1. **主谓是否齐全**（中文无主句常导致英文缺主语）
+2. **时态是否统一**（涉及历史用一般过去时，涉及现状用一般现在时；
+   一段里混用多种时态是掉档主因）
+3. **主语是否跳变**（一段里从 people 跳到 it 再跳到 we 会拉低流畅度）
+4. **是否为中式英语**（逐字对应中文语序、缺逻辑信号词）
+
+整句不通或逻辑断裂每处扣 2 分——这是单条扣分最高的项目。
+
+### 6. 句式重构是否到位的判读
+
+中文常把修饰成分堆在主语前面，英文则需按英文语序重组。
+判卷时对照下表判断译文是否做到了重构：
+
+| 中文原文 | 未重构（扣分） | 重构到位（正确） | 重构方式 |
+|---------|-------------|-----------------|---------|
+| 人们把端午节称为诗人节 | People call the Dragon Boat Festival the Poets' Day. | The Dragon Boat Festival is called the Poets' Day. | 主动转被动 |
+| 作为国家战略性新兴产业，无人机正逐步演变为智能助手 | As a strategic emerging industry, drones are evolving into assistants.（主干被淹没） | Drones are evolving into intelligent assistants as a strategic emerging industry. | 先提主干，修饰后置 |
+| 他的汉语说得比英语好 | His Chinese speaks better than English. | He speaks Chinese better than English. | 动词还原为具体动作 |
+| 这个问题需要解决 | This problem needs to solve. | This problem needs to be solved. / We need to solve this problem. | 补主语 / 改被动 |
+| 这本书值得一读 | This book is worth to read. | This book is worth reading. | 固定搭配 |
+| 他建议我多加练习 | He suggested me to practice more. | He suggested that I should practice more. | 从句补语 |
+
+**判读要点**：若译文与中文语序一一对应、主干被修饰成分淹没、
+或出现汉语直接搬过来的搭配，即属未重构，每处扣 0.5-1 分；
+若整句不成话则按「整句不通」每处扣 2 分。
+
+### 7. 专有名词首字母必须大写
+
+专有名词首字母小写会被直接判错（如 beijing、the spring festival）。
+这是格式性错误，出现在多处会明显拉低印象分。
 
 ## 六、输出格式
 
