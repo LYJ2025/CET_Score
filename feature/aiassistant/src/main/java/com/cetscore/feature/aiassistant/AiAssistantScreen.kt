@@ -34,7 +34,7 @@ import com.cetscore.core.ui.theme.Dimens
 import com.cetscore.core.ui.theme.LocalIsDarkTheme
 import com.cetscore.score.domain.model.AssistantStep
 import com.cetscore.score.domain.model.ExamType
-import com.cetscore.score.domain.model.ScoringTask
+import com.cetscore.score.domain.model.QuestionType
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.rememberHazeState
 
@@ -66,7 +66,7 @@ import dev.chrisbanes.haze.rememberHazeState
 fun AiAssistantScreen(
     uiState: AiAssistantUiState,
     onLevelSelected: (ExamType) -> Unit,
-    onTaskSelected: (ScoringTask) -> Unit,
+    onTaskSelected: (QuestionType) -> Unit,
     onQuestionChange: (String) -> Unit,
     onAnswerChange: (String) -> Unit,
     onClearAnswer: () -> Unit,
@@ -235,7 +235,7 @@ private fun LevelSelectScreen(
 private fun TaskSelectScreen(
     hazeState: HazeState,
     examType: ExamType?,
-    onTaskSelected: (ScoringTask) -> Unit,
+    onTaskSelected: (QuestionType) -> Unit,
     onBack: () -> Unit,
 ) {
     Column(
@@ -258,7 +258,7 @@ private fun TaskSelectScreen(
         Spacer(Modifier.height(Dimens.SpaceXL))
 
         // ★ 这一屏只有作文 / 翻译两个按钮，四级/六级按钮已不在 Composition 中
-        ScoringTask.entries.forEach { task ->
+        QuestionType.entries.forEach { task ->
             GlassCard(
                 hazeState = hazeState,
                 modifier = Modifier
@@ -278,8 +278,11 @@ private fun TaskSelectScreen(
                 Spacer(Modifier.height(Dimens.SpaceXS))
                 Text(
                     text = when (task) {
-                        ScoringTask.ESSAY -> "120-180 词 / 150-200 词 · 含档位标准与范文"
-                        ScoringTask.TRANSLATION -> "140-160 词 / 180-200 词 · 含扣分点清单"
+                        QuestionType.WRITING ->
+                            "${examType?.shortLabel ?: ""} · 120/150 words to 180/200 words · 含档位标准与范文"
+
+                        QuestionType.TRANSLATION ->
+                            "中译英 · 含信达雅维度与常见扣分点清单"
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -340,11 +343,11 @@ private fun ScoringScreen(
         // ---------- 原题目输入 ----------
         InputCard(
             hazeState = hazeState,
-            title = if (step.taskType == ScoringTask.ESSAY) "原题目" else "翻译原文",
-            hint = if (step.taskType == ScoringTask.ESSAY) {
+            title = if (step.questionType == QuestionType.WRITING) "原题目" else "中文原文（翻译题）",
+            hint = if (step.questionType == QuestionType.WRITING) {
                 "粘贴作文题目要求（选填）"
             } else {
-                "粘贴待翻译的中文原文（选填）"
+                "粘贴待翻译的中文原文（选填，中译英）"
             },
             value = uiState.question,
             onValueChange = onQuestionChange,
@@ -359,11 +362,11 @@ private fun ScoringScreen(
         // ---------- 作答输入 ----------
         InputCard(
             hazeState = hazeState,
-            title = if (step.taskType == ScoringTask.ESSAY) "我的作文" else "我的译文",
-            hint = if (step.taskType == ScoringTask.ESSAY) {
-                "粘贴你的作文（必填）"
+            title = if (step.questionType == QuestionType.WRITING) "我的作文" else "我的译文",
+            hint = if (step.questionType == QuestionType.WRITING) {
+                "粘贴你的作文（选填，留空表示未作答）"
             } else {
-                "粘贴你的译文（必填）"
+                "粘贴你的译文（选填，留空表示未作答）"
             },
             value = uiState.answer,
             onValueChange = onAnswerChange,
@@ -371,11 +374,21 @@ private fun ScoringScreen(
             warning = null,
         )
 
+        // ---------- 底部词数提示（仅作文显示，翻译不显示）----------
+        uiState.lengthHint?.let { hint ->
+            Text(
+                text = hint,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = Dimens.SpaceS),
+            )
+        }
+
         // ---------- 模式对应的操作区 ----------
         if (uiState.mode == AssistMode.NORMAL) {
             NormalModePanel(
                 hazeState = hazeState,
-                prompt = uiState.prompt,
+                templateBody = uiState.templateBody,
                 canSubmit = uiState.canSubmit,
                 hasAnswer = !uiState.isAnswerEmpty,
                 onCopyPrompt = onCopyPrompt,

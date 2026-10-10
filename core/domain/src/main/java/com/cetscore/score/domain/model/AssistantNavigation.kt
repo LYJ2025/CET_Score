@@ -37,7 +37,7 @@ sealed interface AssistantStep {
     /** 第三屏：评分界面 */
     data class Scoring(
         val examType: ExamType,
-        val taskType: ScoringTask,
+        val questionType: QuestionType,
     ) : AssistantStep
 }
 
@@ -49,7 +49,7 @@ sealed interface AssistantStep {
  * val nav = AssistantNavigation()
  * nav.selectLevel(ExamType.CET4)        // 第一屏 → 第二屏
  * nav.currentStep                      // TaskSelect
- * nav.selectTask(ScoringTask.ESSAY)    // 第二屏 → 第三屏
+ * nav.selectTask(QuestionType.WRITING)    // 第二屏 → 第三屏
  * nav.currentStep                      // Scoring(CET4, ESSAY)
  * nav.back()                           // → TaskSelect（级别保留）
  * nav.back()                           // → LevelSelect（级别清空）
@@ -66,7 +66,7 @@ class AssistantNavigation {
         private set
 
     /** 当前选中的题型 */
-    var taskType: ScoringTask? = null
+    var questionType: QuestionType? = null
         private set
 
     /**
@@ -77,7 +77,7 @@ class AssistantNavigation {
      */
     fun selectLevel(type: ExamType) {
         examType = type
-        taskType = null          // 换了级别，题型选择作废
+        questionType = null          // 换了级别，题型选择作废
         currentStep = AssistantStep.TaskSelect
     }
 
@@ -86,16 +86,16 @@ class AssistantNavigation {
      *
      * 若尚未选级别，视为从外部直接进入（如首页入口），补设默认级别。
      */
-    fun selectTask(type: ScoringTask) {
+    fun selectTask(type: QuestionType) {
         val level = examType ?: ExamType.CET4.also { examType = it }
-        taskType = type
+        questionType = type
         currentStep = AssistantStep.Scoring(level, type)
     }
 
     /** 从首页等外部入口直接跳到第三屏 */
-    fun jumpToScoring(level: ExamType, type: ScoringTask) {
+    fun jumpToScoring(level: ExamType, type: QuestionType) {
         examType = level
-        taskType = type
+        questionType = type
         currentStep = AssistantStep.Scoring(level, type)
     }
 
@@ -118,7 +118,7 @@ class AssistantNavigation {
         AssistantStep.TaskSelect -> {
             // 回第一屏，按需求清空级别
             examType = null
-            taskType = null
+            questionType = null
             currentStep = AssistantStep.LevelSelect
             true
         }
@@ -130,7 +130,7 @@ class AssistantNavigation {
     fun reset() {
         currentStep = AssistantStep.LevelSelect
         examType = null
-        taskType = null
+        questionType = null
     }
 
     /** 当前是否是第一屏（宿主据此决定是否显示返回按钮） */

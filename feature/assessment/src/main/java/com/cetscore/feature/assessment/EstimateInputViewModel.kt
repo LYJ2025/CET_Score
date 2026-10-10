@@ -30,16 +30,16 @@ data class EstimateInputUiState(
     val config: ExamConfig get() = ExamConfig.of(examType)
 
     /**
-     * 输入是否完整。
+     * 输入是否完成。
      *
-     * 规则：每个题组都至少要明确"答对几题"（可以是 0，但必须被用户碰过），
-     * 且写作/翻译都要选过档位。
+     * 规则：每个题组都被明确赋值过（**可以是 0，但必须被用户碰过**），
+     * 且写作/翻译都已选过档位（0 分档也是有效选择）。
+     *
+     * **不要求分数大于 0** —— 全 0 是真实存在的成绩（试卷全错、作文没写），
+     * 必须允许提交。
      */
     val isInputComplete: Boolean
-        get() = config.allGroups.all { answers.containsKey(it.id) } &&
-            answers.values.any { it > 0 } &&
-            writingScore > 0 &&
-            translationScore > 0
+        get() = config.allGroups.all { answers.containsKey(it.id) }
 
     /** 实时预估总分，用于卡片上方的即时反馈 */
     val liveTotalScore: Int

@@ -23,7 +23,7 @@ class AssistantNavigationTest {
         assertTrue(nav.currentStep is AssistantStep.LevelSelect)
         assertTrue(nav.isFirstScreen)
         assertNull(nav.examType)
-        assertNull(nav.taskType)
+        assertNull(nav.questionType)
     }
 
     // ---------- 第一屏 → 第二屏 ----------
@@ -45,7 +45,7 @@ class AssistantNavigationTest {
 
         assertEquals(ExamType.CET6, nav.examType)
         // 题型未选，说明当前屏只显示"作文/翻译"两个按钮
-        assertNull(nav.taskType)
+        assertNull(nav.questionType)
     }
 
     // ---------- 第二屏 → 第三屏 ----------
@@ -54,36 +54,36 @@ class AssistantNavigationTest {
     fun `点作文应进入第三屏评分界面`() {
         val nav = AssistantNavigation()
         nav.selectLevel(ExamType.CET4)
-        nav.selectTask(ScoringTask.ESSAY)
+        nav.selectTask(QuestionType.WRITING)
 
         val step = nav.currentStep
         assertTrue(step is AssistantStep.Scoring)
         step as AssistantStep.Scoring
         assertEquals(ExamType.CET4, step.examType)
-        assertEquals(ScoringTask.ESSAY, step.taskType)
+        assertEquals(QuestionType.WRITING, step.questionType)
     }
 
     @Test
     fun `完整路径四级作文应得到正确上下文`() {
         val nav = AssistantNavigation()
         nav.selectLevel(ExamType.CET4)
-        nav.selectTask(ScoringTask.ESSAY)
+        nav.selectTask(QuestionType.WRITING)
 
         val step = nav.currentStep as AssistantStep.Scoring
         // 第一屏点四级 → 第二屏点作文 → 第三屏是"四级-作文"
         assertEquals("四级", step.examType.shortLabel)
-        assertEquals("作文", step.taskType.label)
+        assertEquals("作文", step.questionType.label)
     }
 
     @Test
     fun `完整路径六级翻译应得到正确上下文`() {
         val nav = AssistantNavigation()
         nav.selectLevel(ExamType.CET6)
-        nav.selectTask(ScoringTask.TRANSLATION)
+        nav.selectTask(QuestionType.TRANSLATION)
 
         val step = nav.currentStep as AssistantStep.Scoring
         assertEquals("六级", step.examType.shortLabel)
-        assertEquals("翻译", step.taskType.label)
+        assertEquals("翻译", step.questionType.label)
     }
 
     // ---------- 返回：第三屏 → 第二屏（级别保留）----------
@@ -92,7 +92,7 @@ class AssistantNavigationTest {
     fun `第三屏返回应回到第二屏且级别保留`() {
         val nav = AssistantNavigation()
         nav.selectLevel(ExamType.CET6)
-        nav.selectTask(ScoringTask.ESSAY)
+        nav.selectTask(QuestionType.WRITING)
 
         val consumed = nav.back()
 
@@ -105,15 +105,15 @@ class AssistantNavigationTest {
     fun `第三屏返回后可换题型`() {
         val nav = AssistantNavigation()
         nav.selectLevel(ExamType.CET4)
-        nav.selectTask(ScoringTask.ESSAY)
+        nav.selectTask(QuestionType.WRITING)
         nav.back()
 
         // 在第二屏改选翻译
-        nav.selectTask(ScoringTask.TRANSLATION)
+        nav.selectTask(QuestionType.TRANSLATION)
 
         val step = nav.currentStep as AssistantStep.Scoring
         assertEquals("级别仍是四级", ExamType.CET4, step.examType)
-        assertEquals("题型已改为翻译", ScoringTask.TRANSLATION, step.taskType)
+        assertEquals("题型已改为翻译", QuestionType.TRANSLATION, step.questionType)
     }
 
     // ---------- 返回：第二屏 → 第一屏（级别清空）----------
@@ -128,7 +128,7 @@ class AssistantNavigationTest {
         assertTrue(consumed)
         assertTrue("应回到第一屏", nav.currentStep is AssistantStep.LevelSelect)
         assertNull("按需求第二屏返回要清空级别", nav.examType)
-        assertNull(nav.taskType)
+        assertNull(nav.questionType)
     }
 
     @Test
@@ -141,13 +141,13 @@ class AssistantNavigationTest {
     fun `完整往返后状态应回到初始`() {
         val nav = AssistantNavigation()
         nav.selectLevel(ExamType.CET4)
-        nav.selectTask(ScoringTask.ESSAY)
+        nav.selectTask(QuestionType.WRITING)
         nav.back()   // → 第二屏
         nav.back()   // → 第一屏
 
         assertTrue(nav.isFirstScreen)
         assertNull(nav.examType)
-        assertNull(nav.taskType)
+        assertNull(nav.questionType)
     }
 
     // ---------- 切换级别应作废已选题型 ----------
@@ -156,14 +156,14 @@ class AssistantNavigationTest {
     fun `在第二屏换级别应清空题型`() {
         val nav = AssistantNavigation()
         nav.selectLevel(ExamType.CET4)
-        nav.selectTask(ScoringTask.ESSAY)
+        nav.selectTask(QuestionType.WRITING)
         nav.back()   // 回第二屏
 
         // 改选级别
         nav.selectLevel(ExamType.CET6)
 
         assertEquals(ExamType.CET6, nav.examType)
-        assertNull("换级别后题型应作废", nav.taskType)
+        assertNull("换级别后题型应作废", nav.questionType)
     }
 
     // ---------- 从首页直接跳第三屏 ----------
@@ -171,18 +171,18 @@ class AssistantNavigationTest {
     @Test
     fun `jumpToScoring应直接进入第三屏`() {
         val nav = AssistantNavigation()
-        nav.jumpToScoring(ExamType.CET6, ScoringTask.TRANSLATION)
+        nav.jumpToScoring(ExamType.CET6, QuestionType.TRANSLATION)
 
         val step = nav.currentStep as AssistantStep.Scoring
         assertEquals(ExamType.CET6, step.examType)
-        assertEquals(ScoringTask.TRANSLATION, step.taskType)
+        assertEquals(QuestionType.TRANSLATION, step.questionType)
         assertEquals(ExamType.CET6, nav.examType)
     }
 
     @Test
     fun `jumpToScoring后返回仍回第二屏并保留级别`() {
         val nav = AssistantNavigation()
-        nav.jumpToScoring(ExamType.CET4, ScoringTask.ESSAY)
+        nav.jumpToScoring(ExamType.CET4, QuestionType.WRITING)
         nav.back()
 
         assertTrue(nav.currentStep is AssistantStep.TaskSelect)
@@ -219,17 +219,17 @@ class AssistantNavigationTest {
         assertTrue(nav.currentStep is AssistantStep.TaskSelect)
 
         // 点翻译 → 第三屏
-        nav.selectTask(ScoringTask.TRANSLATION)
+        nav.selectTask(QuestionType.TRANSLATION)
         val step = nav.currentStep as AssistantStep.Scoring
         assertEquals(ExamType.CET6, step.examType)
-        assertEquals(ScoringTask.TRANSLATION, step.taskType)
+        assertEquals(QuestionType.TRANSLATION, step.questionType)
     }
 
     @Test
     fun `从第三屏退回第一屏后再重新进入仍从第一屏开始`() {
         val nav = AssistantNavigation()
         nav.selectLevel(ExamType.CET4)
-        nav.selectTask(ScoringTask.ESSAY)
+        nav.selectTask(QuestionType.WRITING)
         nav.back()   // → 第二屏
         nav.back()   // → 第一屏，级别清空
 
@@ -241,7 +241,7 @@ class AssistantNavigationTest {
     @Test
     fun `未选级别时selectTask应补设默认级别`() {
         val nav = AssistantNavigation()
-        nav.selectTask(ScoringTask.ESSAY)
+        nav.selectTask(QuestionType.WRITING)
 
         val step = nav.currentStep as AssistantStep.Scoring
         assertEquals("应补设默认级别四级", ExamType.CET4, step.examType)
@@ -253,13 +253,13 @@ class AssistantNavigationTest {
     fun `reset应回到初始态`() {
         val nav = AssistantNavigation()
         nav.selectLevel(ExamType.CET6)
-        nav.selectTask(ScoringTask.TRANSLATION)
+        nav.selectTask(QuestionType.TRANSLATION)
 
         nav.reset()
 
         assertTrue(nav.isFirstScreen)
         assertNull(nav.examType)
-        assertNull(nav.taskType)
+        assertNull(nav.questionType)
     }
 
     // ---------- 替换语义：同一时刻只有一个屏的状态 ----------
@@ -269,9 +269,9 @@ class AssistantNavigationTest {
         val nav = AssistantNavigation()
         val steps = listOf<() -> Unit>(
             { nav.selectLevel(ExamType.CET4) },
-            { nav.selectTask(ScoringTask.ESSAY) },
+            { nav.selectTask(QuestionType.WRITING) },
             { nav.back() },
-            { nav.selectTask(ScoringTask.TRANSLATION) },
+            { nav.selectTask(QuestionType.TRANSLATION) },
             { nav.back() },
             { nav.back() },
         )

@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cetscore.core.ui.component.GlassCard
 import com.cetscore.core.ui.theme.Dimens
-import com.cetscore.score.domain.model.ScoringPrompt
 import dev.chrisbanes.haze.HazeState
 
 /**
@@ -52,7 +51,7 @@ import dev.chrisbanes.haze.HazeState
 fun ProScoringPanel(
     hazeState: HazeState,
     bridge: ProApiBridgeImpl,
-    prompt: String,
+    templateBody: String,
     question: String,
     answer: String,
     onQuestionChange: (String) -> Unit,
@@ -167,7 +166,7 @@ fun ProScoringPanel(
                             enabled = answer.isNotBlank() && bridge.isConfigured,
                         ) {
                             // 首次使用先弹隐私告知
-                            pendingPrompt = prompt
+                            pendingPrompt = templateBody
                             showConsent = true
                         },
                     contentAlignment = Alignment.Center,

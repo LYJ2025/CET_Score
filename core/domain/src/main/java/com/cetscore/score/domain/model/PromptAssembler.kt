@@ -1,98 +1,65 @@
 package com.cetscore.score.domain.model
 
 /**
- * 提示词组装器 —— **纯函数，不涉及 IO 与 Android**。
+ * 提示词组装 —— **纯函数，不涉及 IO**。
  *
- * 架构：公共部分 + 四套独立模块，按固定顺序拼接：
- * ```
- * common
- * + 对应模块（cet4-writing / cet4-translation / cet6-writing / cet6-translation）
- * + 【考试级别】
- * + 【题型】
- * + 【题目要求 / 翻译原文】
- * + 【我的作答】
- * + 输出格式要求
- * ```
- *
- * 放在 core:domain 的原因：拼接规则是纯逻辑，
- * 应能脱离 Android 运行时直接单元测试。
+ * 四份模板各自都是完整提示词，拼接时只做两件事：
+ * 1. 取对应「级别 + 题型」的模板正文（**绝不混入其他模块**）
+ * 2. 追加用户的原题目与作答
  */
 object PromptAssembler {
 
-    /** assets 中的目录 */
-    const val MODULE_DIR = "prompts/modules"
+    /** 作答区引导语 */
+    const val ANSWER_GUIDE = "【我的作答】："
 
-    /** 公共部分文件名 */
-    const val FILE_COMMON = "common.md"
+    /** 原题目区引导语 */
+    const val QUESTION_GUIDE = "【题目要求/翻译原文】："
 
-    /** 输出格式文件名（所有题型共用） */
-    const val FILE_OUTPUT_FORMAT = "output-format.md"
-
-    /** 标记原题目为空时的提示 */
+    /** 未填原题目时的提示 */
     const val NO_QUESTION_HINT = "（未填原题目，AI 可能无法判断切题度）"
 
-    /** 标记原题目过长时的提示 */
+    /** 原题目过长时的提示 */
     const val QUESTION_TOO_LONG_HINT = "（原题目过长，已截断，请核对题干是否完整）"
 
-    /** 原题目字数上限 —— 超过则截断，避免提示词过长挤占 AI 上下文 */
+    /** 原题目字数上限 —— 超过则截断，避免挤占 AI 上下文 */
     const val MAX_QUESTION_LENGTH = 2_000
 
     /**
-     * 四套独立模块的文件名。
+     * 组装最终要复制的内容。
      *
-     * 用嵌套 when 而非并列条件，避免出现拼写错误导致落到 else 分支。
-     */
-    fun moduleFileName(examType: ExamType, taskType: ScoringTask): String =
-        when (examType) {
-            ExamType.CET4 -> when (taskType) {
-                ScoringTask.ESSAY -> "cet4-writing.md"
-                ScoringTask.TRANSLATION -> "cet4-translation.md"
-            }
-
-            ExamType.CET6 -> when (taskType) {
-                ScoringTask.ESSAY -> "cet6-writing.md"
-                ScoringTask.TRANSLATION -> "cet6-translation.md"
-            }
-        }
-
-    /**
-     * 组装完整提示词。
+     * 结构：
+     * ```
+     * {对应模块的完整提示词}
      *
-     * @param common 公共部分（角色 + 评分总原则 + 降档红线 + 四六级差异）
-     * @param module 对应题型的独立模块
-     * @param outputFormat 输出格式与硬性约束
-     * @param examType 四级 / 六级
-     * @param taskType 作文 / 翻译
+     * ---
+     *
+     * 【题目要求/翻译原文】：
+     * {原题目}
+     *
+     * 【我的作答】：
+     * {用户作答}
+     * ```
+     *
+     * @param templateBody 该模块模板的正文（已从 assets 读出）
      * @param question 原题目 / 翻译原文（可空）
-     * @param answer 我的作答 / 译文
+     * @param answer 用户作答 / 译文
      */
     fun assemble(
-        common: String,
-        module: String,
-        outputFormat: String,
-        examType: ExamType,
-        taskType: ScoringTask,
+        templateBody: String,
         question: String?,
         answer: String,
     ): String = buildString {
-        append(common.trimEnd())
+        append(templateBody.trimEnd())
         append("\n\n---\n\n")
-        append(module.trimEnd())
-        append("\n\n---\n\n")
-
-        append("【考试级别】：").append(examType.shortLabel).append('\n')
-        append("【题型】：").append(taskType.label).append('\n')
-        append("【题目要求/翻译原文】：\n")
-        append(normalizeQuestion(question)).append('\n')
-        append('\n')
-        append("【我的作答】：\n").append(answer.trim()).append('\n')
-
-        append("\n---\n\n")
-        append(outputFormat.trim())
+        append(QUESTION_GUIDE).append('\n')
+        append(normalizeQuestion(question))
+        append("\n\n")
+        append(ANSWER_GUIDE).append('\n')
+        append(answer.trim())
     }
 
     /**
-     * 处理原题目文本：空则给提示，过长则截断。
+     * 处理原题目：空则给提示，过长则截断。
      */
     fun normalizeQuestion(question: String?): String {
         val q = question?.trim().orEmpty()
@@ -104,11 +71,48 @@ object PromptAssembler {
         }
     }
 
-    /** 原题目为空时是否需要提示用户。UI 层用它决定要不要显示警示条。 */
+    /** 原题目为空时应提示用户 */
     fun shouldWarnMissingQuestion(question: String?): Boolean =
         question?.trim().isNullOrEmpty()
 
     /** 原题目是否超长 */
     fun isQuestionTooLong(question: String?): Boolean =
         (question?.trim()?.length ?: 0) > MAX_QUESTION_LENGTH
+}
+
+/**
+ * 作文词数要求 —— **仅作文适用**。
+ *
+ * 四级 120 words to 180 words；六级 150 words to 200 words。
+ * 翻译题型没有词数要求，因此这里只覆盖 WRITING。
+ */
+data class EssayLengthRule(
+    val minWords: Int,
+    val maxWords: Int,
+) {
+    /** 展示文案，例如「120 words to 180 words」 */
+    val display: String get() = "$minWords words to $maxWords words"
+
+    companion object {
+        val CET4 = EssayLengthRule(120, 180)
+        val CET6 = EssayLengthRule(150, 200)
+
+        fun of(examType: ExamType): EssayLengthRule = when (examType) {
+            ExamType.CET4 -> CET4
+            ExamType.CET6 -> CET6
+        }
+
+        /**
+         * 底部提示文案。
+         *
+         * 作文返回对应级别的词数要求；**翻译返回 null** —— 不显示任何词数注释。
+         */
+        fun footerHint(examType: ExamType, questionType: QuestionType): String? =
+            when (questionType) {
+                QuestionType.WRITING ->
+                    "${examType.shortLabel}作文词数要求：${of(examType).display}"
+
+                QuestionType.TRANSLATION -> null
+            }
+    }
 }

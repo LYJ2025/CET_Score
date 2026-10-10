@@ -33,7 +33,7 @@ import com.cetscore.feature.result.ResultViewModel
 import com.cetscore.feature.trend.TrendScreen
 import com.cetscore.feature.trend.TrendViewModel
 import com.cetscore.score.domain.model.ExamType
-import com.cetscore.score.domain.model.ScoringTask
+import com.cetscore.score.domain.model.QuestionType
 import dev.chrisbanes.haze.rememberHazeState
 import com.cetscore.feature.aiassistant.pro.ProApiBridgeImpl
 import com.cetscore.feature.aiassistant.pro.ProScoringPanel
@@ -60,7 +60,7 @@ object Routes {
     /**
      * 估分页「用 AI 精评」入口：已选定级别与题型，直达第三屏评分界面。
      */
-    fun aiAssistantWithContext(examType: ExamType, taskType: ScoringTask) =
+    fun aiAssistantWithContext(examType: ExamType, taskType: QuestionType) =
         "ai_assistant?examType=${examType.name}&taskType=${taskType.name}&presetContext=true"
 
     fun assessment(type: ExamType) = "assessment/${type.name}"
@@ -115,12 +115,12 @@ fun AppNavHost(
                 onTranslationChange = vm::onTranslationScoreChange,
                 onAiRefineWriting = {
                     navController.navigate(
-                        Routes.aiAssistantWithContext(examType, ScoringTask.ESSAY)
+                        Routes.aiAssistantWithContext(examType, QuestionType.WRITING)
                     )
                 },
                 onAiRefineTranslation = {
                     navController.navigate(
-                        Routes.aiAssistantWithContext(examType, ScoringTask.TRANSLATION)
+                        Routes.aiAssistantWithContext(examType, QuestionType.TRANSLATION)
                     )
                 },
                 onCalculate = {
@@ -175,7 +175,7 @@ fun AppNavHost(
                 },
                 navArgument("taskType") {
                     type = NavType.StringType
-                    defaultValue = ScoringTask.ESSAY.name
+                    defaultValue = QuestionType.WRITING.name
                 },
                 navArgument(Routes.ARG_PRESET_CONTEXT) {
                     type = NavType.BoolType
@@ -209,9 +209,9 @@ fun AppNavHost(
 
             if (hasPresetContext) {
                 val examType = ExamType.fromName(entry.arguments?.getString("examType"))
-                val taskType = ScoringTask.entries.firstOrNull {
+                val taskType = QuestionType.entries.firstOrNull {
                     it.name == entry.arguments?.getString("taskType")
-                } ?: ScoringTask.ESSAY
+                } ?: QuestionType.WRITING
                 LaunchedEffect(Unit) {
                     vm.jumpToScoring(examType, taskType)
                 }
@@ -241,7 +241,7 @@ fun AppNavHost(
                     ProScoringPanel(
                         hazeState = hazeState,
                         bridge = proBridge,
-                        prompt = uiState.prompt,
+                        templateBody = uiState.templateBody,
                         question = uiState.question,
                         answer = uiState.answer,
                         onQuestionChange = vm::onQuestionChange,
