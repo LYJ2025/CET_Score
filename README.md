@@ -7,6 +7,8 @@
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.21-7F52FF.svg)](https://kotlinlang.org)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material3-4285F4.svg)](https://developer.android.com/jetpack/compose)
 [![Android](https://img.shields.io/badge/minSdk-26%20|%20targetSdk-34-3DDC84.svg)](https://developer.android.com)
+[![Version](https://img.shields.io/badge/version-1.2-2E7D32.svg)](#快速开始)
+[![Release](https://img.shields.io/badge/build-release%20signed-success)](https://github.com/LYJ2025/CET_Score/releases)
 
 > **免责声明**
 > 本 App 为个人学习用途，估分结果基于简化模型，与官方成绩可能存在偏差，仅供参考。
@@ -18,6 +20,7 @@
 - [界面预览](#界面预览)
 - [特性](#特性)
 - [快速开始](#快速开始)
+- [评分标准文档](#评分标准文档)
 - [项目结构](#项目结构)
 - [核心功能](#核心功能)
 - [AI 评分助手](#ai-评分助手单-app-双模式)
@@ -76,13 +79,83 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 
 ### 构建与运行
 
+当前版本 **1.2**（versionCode 2）。
+
 ```bash
-./gradlew assembleDebug     # 构建 APK
-./gradlew installDebug      # 安装到设备
+./gradlew assembleDebug      # 构建调试包
+./gradlew installDebug      # 安装调试包到设备
+./gradlew assembleRelease   # 构建正式包（已签名、已混淆）
 ./gradlew test              # 跑全部测试
 ```
 
-产物位于 `app/build/outputs/apk/debug/app-debug.apk`（约 20 MB）。
+| 构建类型 | 产物 | 体积 | 说明 |
+|:---|:---|:---|:---|
+| debug | `app/build/outputs/apk/debug/app-debug.apk` | 约 20 MB | 未混淆，带 `.debug` 后缀，可与正式版共存 |
+| release | `app/build/outputs/apk/release/app-release.apk` | **约 1.9 MB** | R8 混淆 + 资源压缩，v2/v3 签名 |
+
+### Release 签名
+
+正式包用 `keystore.properties`（项目根目录，**不提交版本库**）配置签名。
+密钥库默认在 `~/.android/cetscore-release.jks`。
+
+```properties
+storeFile=/absolute/path/to/cetscore-release.jks
+storePassword=***
+keyAlias=cetscore
+keyPassword=***
+```
+
+若要自行生成：
+
+```bash
+keytool -genkeypair -v -keystore cetscore-release.jks \
+  -alias cetscore -keyalg RSA -keysize 2048 -validity 10950 \
+  -dname "CN=CET_Score, OU=Personal, O=CET_Score, C=CN"
+```
+
+> ⚠️ **keystore 与密码务必备份**。Android 要求升级包与已安装版本
+> 使用同一签名，换密钥后无法覆盖安装，只能卸载重装（数据会丢失）。
+>
+> 该文件缺失时 `assembleRelease` 仍能跑通，只是产出**未签名**包，
+> 便于他人克隆仓库后先验证构建。
+
+### 混淆说明
+
+release 开启了 R8 混淆与资源压缩，`app/proguard-rules.pro` 里保留了
+四类必需项：kotlinx.serialization（`detailJson` 编解码）、
+Room 实体（列名按字段名生成）、Compose 运行时、以及枚举的
+`values()`/`valueOf()`（`ExamType`/`QuestionType` 靠 name 存取字符串）。
+
+排查线上崩溃时可临时关闭：
+
+```bash
+# 在 app/build.gradle.kts 里把 isMinifyEnabled / isShrinkResources 改为 false
+./gradlew assembleRelease
+```
+
+---
+
+## 评分标准文档
+
+四份评分标准提示词（`app/src/main/assets/prompts/`）已合并为一份
+Word 文档，便于直接阅读、打印或分享：
+
+**[四六级评分标准提示词.docx](docs/四六级评分标准提示词.docx)**
+
+| 部分 | 文件 | 适用 |
+|:---|:---|:---|
+| 第一部分 | `cet4_writing.md` | 四级 · 作文 |
+| 第二部分 | `cet4_translation.md` | 四级 · 翻译 |
+| 第三部分 | `cet6_writing.md` | 六级 · 作文 |
+| 第四部分 | `cet6_translation.md` | 六级 · 翻译 |
+
+每部分都是**可独立复制给外部 AI 使用的完整提示词**，内容按
+「评卷判读方法」组织——只保留对判分有用的判别标准与量化规则，
+不含考生教学建议。核心量化依据：
+
+- **档位细调按错误数量**：14 档 2/5/7 处小错；8 档 5/4/3 个正确句
+- **翻译先逐句编号**（S1、S2、S3…）再对照判分，避免漏译被漏判
+- **作文按结构特征核对**：立场句、分论点标记、推进标记、总结句
 
 ---
 
