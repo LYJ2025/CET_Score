@@ -7,8 +7,8 @@
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.21-7F52FF.svg)](https://kotlinlang.org)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material3-4285F4.svg)](https://developer.android.com/jetpack/compose)
 [![Android](https://img.shields.io/badge/minSdk-26%20|%20targetSdk-34-3DDC84.svg)](https://developer.android.com)
-[![Version](https://img.shields.io/badge/version-1.2-2E7D32.svg)](#快速开始)
-[![Download](https://img.shields.io/badge/download-v1.2%20APK-2E7D32.svg)](https://github.com/LYJ2025/CET_Score/releases/tag/v1.2)
+[![Version](https://img.shields.io/badge/version-1.3-2E7D32.svg)](#快速开始)
+[![Download](https://img.shields.io/badge/download-v1.3%20APK-2E7D32.svg)](https://github.com/LYJ2025/CET_Score/releases/tag/v1.3)
 [![Release](https://img.shields.io/badge/build-release%20signed-success)](https://github.com/LYJ2025/CET_Score/releases)
 
 > **免责声明**
@@ -80,7 +80,7 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 
 ### 下载安装
 
-**⬇️ [下载 v1.2 正式包](https://github.com/LYJ2025/CET_Score/releases/download/v1.2/CET_Score-v1.2-release.apk)**
+**⬇️ [下载 v1.3 正式包](https://github.com/LYJ2025/CET_Score/releases/download/v1.3/CET_Score-v1.3-release.apk)**
 （1.9 MB，已签名，Android 8.0+）
 
 或从 [Releases 页面](https://github.com/LYJ2025/CET_Score/releases) 选择版本。
@@ -91,7 +91,7 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 
 ### 本地构建
 
-当前版本 **1.2**（versionCode 2）。
+当前版本 **1.3**（versionCode 3）。
 
 ```bash
 ./gradlew assembleDebug      # 构建调试包
