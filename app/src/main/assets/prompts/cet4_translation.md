@@ -35,6 +35,25 @@
 **档内微调规则**：若认为所译内容与某一档标准样卷相似，定为该档；
 若稍优或稍劣，可加 1 分或减 1 分，但**不得加减半分**。
 
+**0.5 分的取整规则**：扣分清单中的「每处 0.5 分」只用于内部累计，
+多处 0.5 分相加后四舍五入为整数（或每两处 0.5 分折算为 1 分档内扣分）。
+「不得加减半分」约束的是**最终得分**，不是计算过程——最终得分必须是整数。
+
+### 表达判定总原则：合适优先于难度，合适优先于形式
+
+词汇没有绝对的好坏，只有合适不合适。简单词汇若用得精准、贴切、与语境吻合，应正常评分，不得因"词汇简单"扣分；若简单词用得出彩、不可替换，应在「语言丰富」或「用词地道」维度加分。反之，生僻词、高级词若搭配不当、语义不准，按用词错误扣分，不得因"词汇高级"加分。
+
+句式没有绝对的模板不模板，只有合适不合适。常见句式、固定衔接结构若与内容贴合、逻辑自然、含有具体信息，视为正常表达，不得判为模板化扣分；若使用巧妙、承接有力，可作为加分项。只有机械套用、可原封不动替换到任何题目、与具体内容脱节的万能句，才判为模板化表达并按模板化规则处理。
+
+判定口径：
+- 词汇简单但精准贴切：正常评分，不扣分；用得出彩可加分。
+- 词汇高级但搭配不当、语义不准：按用词错误扣分，不因"高级"加分。
+- 常见句式含具体内容、逻辑贴合：正常评分，不判模板化。
+- 常见句式用得好、承接自然：可作为加分项。
+- 万能句机械套用、可任意替换、与内容脱节：判模板化，按占比规则处理。
+
+一句话：不因简单而贬，不因高级而捧；不因常见而扣，不因花哨而加。判断依据只有一条——这个表达放在这句话、这个语境里，是否合适。
+
 ### 四级容错基准
 
 关键词错译可能只在档内扣分。对语法错误的容忍度相对较高——
@@ -124,23 +143,27 @@
 
 ## 四、常见扣分点清单
 
+> **总约束**：扣分清单只用于定档后的档内微调参考，
+> **不得从 15 分逐项倒扣得出总分**。最终分数必须先定档，
+> 再用错误数量在档内 ±1 调整。
+
 ### 专有名词非标准翻译（每处扣 0.5-1 分）
 
 | 中文原文 | 常见错误译法 | 标准译法 |
 |---------|------------|---------|
-| 春节 | Chinese New Year | the Spring Festival |
+| 春节 | —（Chinese New Year 可接受） | the Spring Festival（更标准） |
 | 清明节 | Clear Day | Tomb-Sweeping Day / Qingming Festival |
 | 端午节 | Dragon Boat Day | the Dragon Boat Festival |
 | 中秋节 | Mid-Autumn Day | the Mid-Autumn Festival |
 | 红包 | red bag / red packet | red envelope |
-| 压岁钱 | lucky money（仅译一半） | lucky money for warding off evil spirits |
+| 压岁钱 | gift money 等自创译法 | lucky money（red envelope money 亦可） |
 | 春联 | spring couplets（缺节日信息） | Spring Festival couplets |
 | 灯笼 | lantern（可接受） | red lanterns |
 | 筷子 | chopstick（单数）/ chopsticks | chopsticks |
 | 四合院 | four closed yards | siheyuan / a traditional Chinese courtyard house |
 | 故宫 | the ancient palace | the Forbidden City |
 | 长城 | the Great Wall（可接受） | the Great Wall |
-| 京剧 | Beijing Opera | Peking Opera |
+| 京剧 | —（Beijing Opera 可接受） | Peking Opera（更传统） |
 | 儒家思想 | Confucian thought | Confucianism |
 | 书法 | writing（歧义） | calligraphy |
 | 针灸 | needle burning | acupuncture |
@@ -169,7 +192,7 @@
 |---------|---------|------|
 | 单复数误用 | 每处 0.5-1 分 | Many student → Many students |
 | 主谓不一致 | 每处 1-1.5 分 | This make → This makes |
-| 双谓语错误 | 每句直接扣 2 分 | There are many people live in the city. |
+| 双谓语错误 | 每句直接扣 2 分 | There are many people live in the city. → There are many people living in the city. |
 | 时态混乱 | 每处 1-1.5 分 |（四级容忍度略高，但时态错乱仍需扣分）|
 | 冠词缺失 | 每处 0.5 分 | China courier → The courier service in China |
 | 介词搭配错误 | 每处 0.5-1 分 | in Monday → on Monday |
@@ -237,7 +260,7 @@
 不能简化成 a long history。
 
 **第二层 关键术语用固定译法**：不能自创。
-例如「春节」译 the Spring Festival 而非 Chinese New Year；
+例如「春节」译 the Spring Festival（Chinese New Year 亦可接受，前者更标准）；
 「故宫」译 the Forbidden City 而非 the ancient palace；
 「儒家思想」译 Confucianism。
 
@@ -287,8 +310,8 @@
 
 ### 7. 专有名词首字母必须大写
 
-专有名词首字母小写会被直接判错（如 beijing、the spring festival）。
-这是格式性错误，出现在多处会明显拉低印象分。
+专有名词首字母小写每处扣 0.5 分，多处出现明显拉低印象分；
+不因单处大小写错误直接判整句错（如 beijing、the spring festival）。
 
 ## 六、输出格式
 
@@ -298,6 +321,7 @@
 
 - 当前档位：X分档（XX-XX分）
 - 最终得分：X / 15
+- 关键术语准确率：X%（对照档位描述中的术语要求）
 - 判定理由：用 2-3 句话说明为什么归入这个档位，**必须引用我译文中的具体句子**作为依据。
 
 ### 二、维度分析
@@ -307,6 +331,8 @@
 | 忠实原文（信） | 约40% | | （引用原句，说明有无漏译/增义/曲解） |
 | 英文通顺（达） | 约35% | | （引用原句，说明语法与地道程度） |
 | 用词地道（雅） | 约25% | | （引用原句，评价术语与用词） |
+
+维度评分仅用于诊断，不直接换算总分；总分以档位判定和档内微调为准。
 
 ### 三、逐句诊断
 
