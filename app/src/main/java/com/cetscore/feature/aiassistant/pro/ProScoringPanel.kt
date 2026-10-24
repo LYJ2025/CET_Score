@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cetscore.core.ui.component.GlassCard
 import com.cetscore.core.ui.theme.Dimens
+import com.cetscore.score.domain.model.PromptAssembler
 import dev.chrisbanes.haze.HazeState
 
 /**
@@ -140,13 +141,17 @@ fun ProScoringPanel(
             Spacer(Modifier.height(Dimens.SpaceM))
 
             Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
+                // 三个条件缺一不可：有作答、已配置 API、模板已加载
+                val canStart = answer.isNotBlank() &&
+                    bridge.isConfigured &&
+                    templateBody.isNotEmpty()
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(48.dp)
                         .clip(RoundedCornerShape(Dimens.CornerMedium))
                         .background(
-                            if (answer.isNotBlank() && bridge.isConfigured) {
+                            if (canStart) {
                                 Brush.horizontalGradient(
                                     listOf(
                                         MaterialTheme.colorScheme.primary,
@@ -163,10 +168,16 @@ fun ProScoringPanel(
                             }
                         )
                         .clickable(
-                            enabled = answer.isNotBlank() && bridge.isConfigured,
+                            enabled = canStart,
                         ) {
                             // 首次使用先弹隐私告知
-                            pendingPrompt = templateBody
+                            // 必须走 PromptAssembler：只发模板会导致 AI 收不到
+                            // 题目与作答，回「你尚未提供原文和译文」
+                            pendingPrompt = PromptAssembler.assemble(
+                                templateBody = templateBody,
+                                question = question,
+                                answer = answer,
+                            )
                             showConsent = true
                         },
                     contentAlignment = Alignment.Center,
@@ -177,7 +188,7 @@ fun ProScoringPanel(
                             else -> "开始 AI 评分"
                         },
                         style = MaterialTheme.typography.titleMedium,
-                        color = if (answer.isNotBlank() && bridge.isConfigured) Color.White
+                        color = if (canStart) Color.White
                         else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }

@@ -116,7 +116,8 @@ fun InputCard(
 @Composable
 fun NormalModePanel(
     hazeState: HazeState,
-    templateBody: String,
+    /** 已拼好题目与作答的完整文本 —— 预览、字数与复制都用它 */
+    assembledPrompt: String,
     canSubmit: Boolean,
     hasAnswer: Boolean,
     onCopyPrompt: (String) -> Unit,
@@ -144,7 +145,7 @@ fun NormalModePanel(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = "${templateBody.length} 字符",
+                    text = "${assembledPrompt.length} 字符",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -152,7 +153,7 @@ fun NormalModePanel(
 
             Spacer(Modifier.height(Dimens.SpaceS))
 
-            if (templateBody.isEmpty()) {
+            if (assembledPrompt.isEmpty()) {
                 Text(
                     text = "填写上方内容后自动生成",
                     style = MaterialTheme.typography.bodyMedium,
@@ -171,7 +172,7 @@ fun NormalModePanel(
                         .padding(Dimens.SpaceM),
                 ) {
                     Text(
-                        text = templateBody,
+                        text = assembledPrompt,
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontFamily = FontFamily.Monospace,
                             fontSize = 12.sp,
@@ -189,7 +190,7 @@ fun NormalModePanel(
                 // 作答可留空（代表未作答），因此按钮始终是"生成提示词并复制"
                 text = "生成提示词并复制",
                 enabled = canSubmit,
-                onClick = { onCopyPrompt(templateBody) },
+                onClick = { onCopyPrompt(assembledPrompt) },
                 modifier = Modifier.weight(1f),
             )
             SecondaryActionButton(

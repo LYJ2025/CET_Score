@@ -388,7 +388,7 @@ private fun ScoringScreen(
         if (uiState.mode == AssistMode.NORMAL) {
             NormalModePanel(
                 hazeState = hazeState,
-                templateBody = uiState.templateBody,
+                assembledPrompt = uiState.copyText,
                 canSubmit = uiState.canSubmit,
                 hasAnswer = !uiState.isAnswerEmpty,
                 onCopyPrompt = onCopyPrompt,
