@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -32,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -199,13 +201,17 @@ fun ProScoringPanel(
                         .clip(RoundedCornerShape(Dimens.CornerMedium))
                         .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
                         .clickable { showSettings = true }
-                        .padding(horizontal = Dimens.SpaceL),
+                        .padding(horizontal = Dimens.SpaceM),
                     contentAlignment = Alignment.Center,
                 ) {
+                    // 显示当前使用的 AI 名称，切换后一眼可见
                     Text(
-                        text = "设置",
+                        text = bridge.configStore().activeProfile()?.displayName ?: "设置",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.widthIn(max = 92.dp),
                     )
                 }
             }
@@ -412,22 +418,96 @@ private fun ConsentDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     )
 }
 
-/** API 配置弹窗 */
+/**
+ * AI 配置弹窗 —— 最多保存 [ApiConfigStore.MAX_PROFILES] 套，可随时切换。
+ *
+ * 顶部是已保存配置的标签，点击即可切换；下方编辑当前这一套的四个字段。
+ * 切换标签时字段会自动重新加载（用 editingSlot 作为 remember 的 key）。
+ */
 @Composable
 private fun ApiSettingsDialog(config: ApiConfigStore, onDismiss: () -> Unit) {
-    var apiKey by remember { mutableStateOf(config.apiKey) }
-    var baseUrl by remember { mutableStateOf(config.baseUrl) }
-    var model by remember { mutableStateOf(config.model) }
+    var profiles by remember { mutableStateOf(config.profiles()) }
+    var editingSlot by remember {
+        mutableStateOf(
+            config.activeSlot().takeIf { it >= 0 }
+                ?: config.profiles().firstOrNull()?.slot
+                ?: 0
+        )
+    }
+    // 删除 / 新增时递增，强制重载输入框内容（槽位号可能没变）
+    var resetToken by remember { mutableStateOf(0) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    val saved = config.profiles().firstOrNull { it.slot == editingSlot }
+
+    var name by remember(editingSlot, resetToken) { mutableStateOf(saved?.name.orEmpty()) }
+    var apiKey by remember(editingSlot, resetToken) { mutableStateOf(saved?.apiKey.orEmpty()) }
+    var baseUrl by remember(editingSlot, resetToken) {
+        mutableStateOf(saved?.baseUrl?.ifBlank { ApiConfigStore.DEFAULT_BASE_URL } ?: ApiConfigStore.DEFAULT_BASE_URL)
+    }
+    var model by remember(editingSlot, resetToken) {
+        mutableStateOf(saved?.model?.ifBlank { ApiConfigStore.DEFAULT_MODEL } ?: ApiConfigStore.DEFAULT_MODEL)
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("API 设置", style = MaterialTheme.typography.titleLarge) },
+        title = { Text("AI 设置", style = MaterialTheme.typography.titleLarge) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 460.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS),
+            ) {
                 Text(
-                    text = "支持任何 OpenAI 兼容接口",
+                    text = "支持任何 OpenAI 兼容接口。最多保存 " +
+                        "${ApiConfigStore.MAX_PROFILES} 套，随时切换用哪个改卷。",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                // ---------- 配置切换 ----------
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    profiles.forEach { p ->
+                        SlotChip(
+                            label = p.displayName,
+                            selected = p.slot == editingSlot,
+                            modifier = Modifier.weight(1f),
+                            onClick = { editingSlot = p.slot; error = null },
+                        )
+                    }
+                    if (profiles.size < ApiConfigStore.MAX_PROFILES) {
+                        SlotChip(
+                            label = "＋ 新增",
+                            selected = saved == null,
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                val empty = config.firstEmptySlot()
+                                if (empty >= 0) {
+                                    resetToken++
+                                    editingSlot = empty
+                                    error = null
+                                }
+                            },
+                        )
+                    }
+                }
+
+                if (profiles.isEmpty()) {
+                    Text(
+                        text = "还没有配置，填好下面四项后点「保存」即可。",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("配置名称（选填）") },
+                    placeholder = { Text("如：DeepSeek 官方") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(Dimens.CornerSmall),
                 )
                 OutlinedTextField(
                     value = apiKey,
@@ -450,16 +530,59 @@ private fun ApiSettingsDialog(config: ApiConfigStore, onDismiss: () -> Unit) {
                     singleLine = true,
                     shape = RoundedCornerShape(Dimens.CornerSmall),
                 )
+
+                error?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+
+                // ---------- 删除当前配置 ----------
+                if (saved != null) {
+                    TextButton(
+                        onClick = {
+                            config.deleteSlot(editingSlot)
+                            profiles = config.profiles()
+                            resetToken++
+                            editingSlot = profiles.firstOrNull()?.slot ?: 0
+                            error = null
+                        }
+                    ) {
+                        Text(
+                            text = "删除这套配置",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
             TextButton(onClick = {
-                config.apiKey = apiKey
-                config.baseUrl = baseUrl
-                config.model = model
+                val profile = AiProfile(
+                    slot = editingSlot,
+                    name = name,
+                    apiKey = apiKey,
+                    baseUrl = baseUrl,
+                    model = model,
+                )
+                if (!profile.isComplete) {
+                    error = "API Key、Base URL、模型名都要填"
+                    return@TextButton
+                }
+                if (!config.save(profile)) {
+                    error = "最多只能保存 ${ApiConfigStore.MAX_PROFILES} 套配置"
+                    return@TextButton
+                }
+                // 保存后立即设为当前使用
+                config.selectSlot(editingSlot)
+                profiles = config.profiles()
+                error = null
                 onDismiss()
             }) {
-                Text("保存")
+                Text("保存并使用")
             }
         },
         dismissButton = {
@@ -469,5 +592,35 @@ private fun ApiSettingsDialog(config: ApiConfigStore, onDismiss: () -> Unit) {
         },
         shape = RoundedCornerShape(Dimens.CornerMedium),
     )
+}
+
+/** 配置切换标签 */
+@Composable
+private fun SlotChip(
+    label: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(Dimens.CornerSmall))
+            .background(
+                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+            )
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp, horizontal = 6.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (selected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
 

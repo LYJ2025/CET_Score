@@ -30,8 +30,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cetscore.core.ui.AppCopy
+import com.cetscore.core.ui.component.DonutChartWithLegend
 import com.cetscore.core.ui.component.GlassBackground
 import com.cetscore.core.ui.component.GlassCard
+import com.cetscore.core.ui.component.GroupDetailRow
+import com.cetscore.core.ui.component.ModuleScoreGrid
+import com.cetscore.core.ui.component.ScoreSectionHeader
 import com.cetscore.core.ui.theme.Dimens
 import com.cetscore.core.ui.theme.LocalIsDarkTheme
 import com.cetscore.core.ui.theme.scoreColor
@@ -95,11 +99,11 @@ fun EstimateResultScreen(
                 TotalScoreCard(hazeState = hazeState, result = result, createdAt = createdAt)
 
                 // ---------- 2. 模块得分 ----------
-                SectionHeader("各模块得分")
+                ScoreSectionHeader("各模块得分")
                 ModuleScoreGrid(hazeState = hazeState, result = result)
 
                 // ---------- 3. 占比环形图 ----------
-                SectionHeader("各部分得分占比")
+                ScoreSectionHeader("各部分得分占比")
                 GlassCard(
                     hazeState = hazeState,
                     modifier = Modifier.fillMaxWidth(),
@@ -116,7 +120,7 @@ fun EstimateResultScreen(
                 }
 
                 // ---------- 4. 明细列表 ----------
-                SectionHeader("题组明细")
+                ScoreSectionHeader("题组明细")
                 GlassCard(
                     hazeState = hazeState,
                     modifier = Modifier.fillMaxWidth(),
@@ -242,105 +246,6 @@ private fun TotalScoreCard(hazeState: HazeState, result: ScoreResult, createdAt:
     }
 }
 
-/** 模块得分 2×2 网格 */
-@Composable
-private fun ModuleScoreGrid(hazeState: HazeState, result: ScoreResult) {
-    val items = listOf(
-        Triple("听力理解", result.listeningTotal, 35f),
-        Triple("阅读理解", result.readingTotal, 35f),
-        Triple("写作", result.writingTotal, 15f),
-        Triple("翻译", result.translationTotal, 15f),
-    )
-
-    Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
-        items.chunked(2).forEach { rowItems ->
-            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
-                rowItems.forEach { (label, score, full) ->
-                    ModuleScoreTile(
-                        hazeState = hazeState,
-                        label = label,
-                        score = score,
-                        fullScore = full * 7.1f,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ModuleScoreTile(
-    hazeState: HazeState,
-    label: String,
-    score: Float,
-    fullScore: Float,
-    modifier: Modifier = Modifier,
-) {
-    val ratio = if (fullScore > 0) score / fullScore else 0f
-
-    GlassCard(
-        hazeState = hazeState,
-        modifier = modifier,
-        cornerRadius = Dimens.CornerSmall,
-        blurRadius = 16.dp,
-        elevation = 5.dp,
-        contentPadding = PaddingValues(Dimens.SpaceM),
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = formatOneDecimal(score),
-            style = MaterialTheme.typography.headlineMedium,
-            color = scoreColor(ratio),
-        )
-        Text(
-            text = "/ ${formatOneDecimal(fullScore)}",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-/** 题组明细行 */
-@Composable
-private fun GroupDetailRow(group: GroupResult) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = group.title,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = group.fullName,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Column(horizontalAlignment = Alignment.End) {
-            Text(
-                text = "答对 ${group.accuracyText}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = "得 ${formatOneDecimal(group.rawScore)} 分",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-    }
-}
-
 /** 底部两个按钮 */
 @Composable
 private fun BottomActions(
@@ -410,17 +315,6 @@ private fun BottomActions(
             }
         }
     }
-}
-
-/** 分区标题 */
-@Composable
-private fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.onSurface,
-        modifier = Modifier.padding(top = Dimens.SpaceS),
-    )
 }
 
 /** 时间格式化 */

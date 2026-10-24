@@ -1,10 +1,11 @@
-package com.cetscore.feature.result
+package com.cetscore.core.ui.component
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,29 +22,157 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cetscore.core.ui.theme.Dimens
+import com.cetscore.core.ui.theme.scoreColor
+import com.cetscore.score.domain.model.GroupResult
 import com.cetscore.score.domain.model.Proportion
-import kotlin.math.min
+import dev.chrisbanes.haze.HazeState
+
+/**
+ * 估分结果的可复用展示组件。
+ *
+ * 抽到 core:ui 的原因：结果页与历史详情页需要**完全一致**的展示，
+ * 否则同一份数据在两个界面看起来不一样，用户会以为算错了。
+ */
+
+/** 分区标题 */
+@Composable
+fun ScoreSectionHeader(title: String, modifier: Modifier = Modifier) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = modifier.padding(top = Dimens.SpaceS),
+    )
+}
+
+/**
+ * 模块得分 2×2 网格。
+ *
+ * 传入的 [com.cetscore.score.domain.model.ScoreResult] 中，
+ * 各 total 字段已是 710 分制，所以满分按 35/15 × 7.1 换算。
+ */
+@Composable
+fun ModuleScoreGrid(
+    hazeState: HazeState,
+    result: com.cetscore.score.domain.model.ScoreResult,
+    modifier: Modifier = Modifier,
+) {
+    val items = listOf(
+        Triple("听力理解", result.listeningTotal, 35f),
+        Triple("阅读理解", result.readingTotal, 35f),
+        Triple("写作", result.writingTotal, 15f),
+        Triple("翻译", result.translationTotal, 15f),
+    )
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS),
+    ) {
+        items.chunked(2).forEach { rowItems ->
+            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
+                rowItems.forEach { (label, score, full) ->
+                    ModuleScoreTile(
+                        hazeState = hazeState,
+                        label = label,
+                        score = score,
+                        fullScore = full * 7.1f,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModuleScoreTile(
+    hazeState: HazeState,
+    label: String,
+    score: Float,
+    fullScore: Float,
+    modifier: Modifier = Modifier,
+) {
+    val ratio = if (fullScore > 0) score / fullScore else 0f
+
+    GlassCard(
+        hazeState = hazeState,
+        modifier = modifier,
+        cornerRadius = Dimens.CornerSmall,
+        blurRadius = 16.dp,
+        elevation = 5.dp,
+        contentPadding = PaddingValues(Dimens.SpaceM),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = formatOneDecimal(score),
+            style = MaterialTheme.typography.headlineMedium,
+            color = scoreColor(ratio),
+        )
+        Text(
+            text = "/ ${formatOneDecimal(fullScore)}",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** 题组明细行：左标题 + 右对题数与得分 */
+@Composable
+fun GroupDetailRow(group: GroupResult, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = group.title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = group.fullName,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = "答对 ${group.accuracyText}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = "得 ${formatOneDecimal(group.rawScore)} 分",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+    }
+}
 
 /**
  * 环形图 + 图例。
  *
- * **纯 Compose Canvas 手绘，不引入图表库**：
- * 用 [Canvas] 的 drawArc 逐段绘制扇形。
+ * **纯 Compose Canvas 手绘，不引入图表库**：用 [Canvas] 的 drawArc 逐段绘制扇形。
  *
  * 关键处理：
  *  1. **占比为 0 的部分不绘制**。若绘制 0% 的扇形，drawArc 的起止角相同，
  *     在部分设备上会画出长度为 0 但有描边宽度的异常弧线（视觉上像一条线）。
  *  2. **各部分占比由 ScoreCalculator 用最大余数法保证合计 100%**，
  *     所以这里按比例换算角度不会出现缺口。
- *  3. 图例用全称 + 换行（Prompt 要求全称较长需支持换行，不允许溢出）。
+ *  3. 图例用全称 + 换行（全称较长需支持换行，不允许溢出）。
  */
 @Composable
 fun DonutChartWithLegend(
@@ -72,7 +201,6 @@ fun DonutChartWithLegend(
                 )
                 val arcSize = Size(outerRadius * 2, outerRadius * 2)
 
-                // 只绘制占比 > 0 的部分，避免 0% 扇形画出异常细线
                 val drawable = proportions.filter { it.proportion > 0f }
                 var startAngle = -90f   // 从 12 点方向开始
 
@@ -143,7 +271,6 @@ private fun LegendRow(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Top,
     ) {
-        // 色块
         Box(
             modifier = Modifier
                 .padding(top = 4.dp)
@@ -155,7 +282,6 @@ private fun LegendRow(
                 ),
         )
         Spacer(Modifier.width(8.dp))
-        // 全称：允许换行（Prompt 明确要求）
         Text(
             text = name,
             style = MaterialTheme.typography.labelSmall,
@@ -164,7 +290,6 @@ private fun LegendRow(
             lineHeight = 14.sp,
         )
         Spacer(Modifier.width(6.dp))
-        // 占比 + 原始分
         Column(horizontalAlignment = Alignment.End) {
             Text(
                 text = percentText,
@@ -198,6 +323,6 @@ fun defaultDonutColors(): List<Color> = listOf(
 )
 
 /** 一位小数，整数则省略小数位 */
-internal fun formatOneDecimal(value: Float): String =
+fun formatOneDecimal(value: Float): String =
     if (value == value.toInt().toFloat()) value.toInt().toString()
     else String.format("%.1f", value)

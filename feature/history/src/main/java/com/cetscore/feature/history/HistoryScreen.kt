@@ -127,17 +127,15 @@ fun HistoryScreen(
     }
 
     // ---------- 记录详情面板（点击卡片进入） ----------
-    val detailId = uiState.detailRecordId
-    if (detailId != null) {
-        val record = uiState.records.firstOrNull { it.id == detailId }
-        if (record != null) {
-            HistoryDetailBottomSheet(
-                record = record,
-                onDismiss = onDismissDetail,
-                onEditNote = { onEditNote(record.id) },
-                onDelete = { onDelete(record.id) },
-            )
-        }
+    val detailRecord = uiState.detailRecord
+    if (detailRecord != null) {
+        HistoryDetailBottomSheet(
+            record = detailRecord,
+            result = uiState.detailResult,
+            onDismiss = onDismissDetail,
+            onEditNote = { onEditNote(detailRecord.id) },
+            onDelete = { onDelete(detailRecord.id) },
+        )
     }
 
     // ---------- 备注编辑弹窗 ----------

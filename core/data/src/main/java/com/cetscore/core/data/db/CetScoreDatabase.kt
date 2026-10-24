@@ -34,7 +34,11 @@ abstract class CetScoreDatabase : RoomDatabase() {
                 DB_NAME,
             )
                 // 纯本地数据库，不做任何网络同步
-                .fallbackToDestructiveMigration()
+                //
+                // 注意：这里**严禁**使用 fallbackToDestructiveMigration()。
+                // 它会在表结构变化时直接删库重建，导致用户升级一次就丢光历史记录。
+                // 以后 version +1 时，必须在 Migrations.ALL 里补上对应迁移。
+                .addMigrations(*Migrations.ALL)
                 .build()
     }
 }
