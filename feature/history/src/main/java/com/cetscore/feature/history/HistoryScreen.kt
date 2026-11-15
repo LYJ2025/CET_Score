@@ -67,6 +67,10 @@ fun HistoryScreen(
     onEditNote: (Long) -> Unit,
     onDismissNoteDialog: () -> Unit,
     onUpdateNote: (Long, String?) -> Unit,
+    onEditFeedback: (Long, String) -> Unit,
+    onDismissFeedbackEdit: () -> Unit,
+    onUpdateFeedback: (String) -> Unit,
+    onRemoveFeedback: (Long, String) -> Unit,
     onDelete: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -132,9 +136,23 @@ fun HistoryScreen(
         HistoryDetailBottomSheet(
             record = detailRecord,
             result = uiState.detailResult,
+            feedbacks = uiState.detailFeedbacks,
             onDismiss = onDismissDetail,
             onEditNote = { onEditNote(detailRecord.id) },
+            onEditFeedback = { task -> onEditFeedback(detailRecord.id, task) },
+            onRemoveFeedback = { task -> onRemoveFeedback(detailRecord.id, task) },
             onDelete = { onDelete(detailRecord.id) },
+        )
+    }
+
+    // ---------- AI 批改编辑弹窗 ----------
+    val editingFeedback = uiState.editingFeedback
+    if (editingFeedback != null) {
+        FeedbackEditDialog(
+            title = "编辑${editingFeedback.taskLabel}批改",
+            initialValue = uiState.editingFeedbackText,
+            onConfirm = onUpdateFeedback,
+            onDismiss = onDismissFeedbackEdit,
         )
     }
 
@@ -245,21 +263,36 @@ private fun RecordRow(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    if (record.hasAiFeedback) {
+                        Text(
+                            text = "含 AI 批改",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+                        )
+                    }
                 }
 
-                // 右侧：总分
+                // 右侧：总分。只有批改没有估分的记录不能显示成 0 分
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "${record.totalScore}",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    Text(
-                        text = "/ 710",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    if (record.isAiOnly) {
+                        Text(
+                            text = "仅 AI 批改",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    } else {
+                        Text(
+                            text = "${record.totalScore}",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            text = "/ 710",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
 

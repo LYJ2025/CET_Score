@@ -1,6 +1,7 @@
 package com.cetscore.core.data.db
 
 import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
  * 数据库迁移集中管理。
@@ -22,13 +23,26 @@ import androidx.room.migration.Migration
  *
  * 漏写 Migration 时 Room 会抛 `IllegalStateException` 让升级失败，
  * 而不是静默清库 —— 宁可让开发者立刻发现，也不能让用户丢数据。
- *
- * 当前数据库版本为 1，尚无历史迁移。
- * AI 配置存在 SharedPreferences（见 ApiConfigStore），不进数据库，
- * 因此本版本不需要新增表。
  */
 object Migrations {
 
-    /** 全部迁移，按版本顺序。目前版本 1 起步，暂无迁移。 */
-    val ALL: Array<Migration> = emptyArray()
+    /**
+     * 1 → 2：记录表支持保存 AI 批改。
+     *
+     * 新增两列，都是可空的，旧记录无需回填：
+     * - `aiFeedbackJson`：按题型保存的批改集合（JSON），null 表示没有批改
+     * - `kind`：记录类型（SCORE / AI_ONLY）。旧记录为 NULL，
+     *   由 `RecordKind.fromName` 兜底成 SCORE
+     *
+     * 只做 ADD COLUMN，不重建表，几万条记录也是毫秒级，不会卡启动。
+     */
+    val MIGRATION_1_2 = object : Migration(1, 2) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE exam_records ADD COLUMN aiFeedbackJson TEXT")
+            db.execSQL("ALTER TABLE exam_records ADD COLUMN kind TEXT")
+        }
+    }
+
+    /** 全部迁移，按版本顺序。 */
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2)
 }

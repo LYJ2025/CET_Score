@@ -32,6 +32,16 @@ interface ExamRecordDao {
     @Query("UPDATE exam_records SET note = :note WHERE id = :id")
     suspend fun updateNote(id: Long, note: String?)
 
+    /**
+     * 更新记录上的 AI 批改集合。
+     *
+     * 整个 JSON 一起替换，而不是在 SQL 里改某个 key ——
+     * 批改文本长度不确定，交给上层序列化更安全。
+     * 传 null 表示这条记录不再有批改。
+     */
+    @Query("UPDATE exam_records SET aiFeedbackJson = :json WHERE id = :id")
+    suspend fun updateAiFeedbackJson(id: Long, json: String?)
+
     @Query("DELETE FROM exam_records WHERE id = :id")
     suspend fun deleteById(id: Long)
 

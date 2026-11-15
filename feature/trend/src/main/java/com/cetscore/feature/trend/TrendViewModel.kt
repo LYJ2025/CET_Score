@@ -44,10 +44,12 @@ class TrendViewModel(
         repository.getAllRecords(),
         _selected,
     ) { filter, all, selected ->
+        // 「仅 AI 批改」的记录没有估分，总分是占位 0，画进折线会把曲线拉到底
+        val scored = all.filter { !it.isAiOnly }
         val filtered = when (filter) {
-            TrendFilter.ALL -> all
-            TrendFilter.CET4 -> all.filter { it.examType == ExamType.CET4.name }
-            TrendFilter.CET6 -> all.filter { it.examType == ExamType.CET6.name }
+            TrendFilter.ALL -> scored
+            TrendFilter.CET4 -> scored.filter { it.examType == ExamType.CET4.name }
+            TrendFilter.CET6 -> scored.filter { it.examType == ExamType.CET6.name }
         }
         // 折线图需要时间正序
         val chronological = filtered.sortedBy { it.createdAt }

@@ -9,7 +9,7 @@ import com.cetscore.core.data.entity.ExamRecord
 
 @Database(
     entities = [ExamRecord::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class CetScoreDatabase : RoomDatabase() {

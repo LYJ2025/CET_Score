@@ -26,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,10 +38,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cetscore.core.data.entity.ExamRecord
+import com.cetscore.core.data.repository.ExamRecordRepository
 import com.cetscore.core.ui.component.GlassCard
 import com.cetscore.core.ui.theme.Dimens
+import com.cetscore.feature.aiassistant.rememberClipboardCopier
+import com.cetscore.score.domain.model.ExamType
 import com.cetscore.score.domain.model.PromptAssembler
+import com.cetscore.score.domain.model.QuestionType
 import dev.chrisbanes.haze.HazeState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * 专业模式面板 —— **仅在 online flavor 编译**。
@@ -54,6 +62,9 @@ import dev.chrisbanes.haze.HazeState
 fun ProScoringPanel(
     hazeState: HazeState,
     bridge: ProApiBridgeImpl,
+    repository: ExamRecordRepository,
+    examType: ExamType,
+    questionType: QuestionType,
     templateBody: String,
     question: String,
     answer: String,
@@ -64,7 +75,26 @@ fun ProScoringPanel(
     var showConsent by remember { mutableStateOf(false) }
     var pendingPrompt by remember { mutableStateOf("") }
 
+    // 保存批改
+    var showSave by remember { mutableStateOf(false) }
+    var savedHint by remember { mutableStateOf<String?>(null) }
+    var pendingOverwrite by remember { mutableStateOf<ExamRecord?>(null) }
+
+    val scope = rememberCoroutineScope()
+    val copier = rememberClipboardCopier()
     val state by bridge.state.collectAsStateWithLifecycle()
+
+    // 已有记录列表：保存批改时选目标
+    val records by remember(repository) { repository.getAllRecords() }
+        .collectAsStateWithLifecycle(initialValue = emptyList())
+
+    // 保存成功提示自动消失
+    LaunchedEffect(savedHint) {
+        if (savedHint != null) {
+            delay(2500)
+            savedHint = null
+        }
+    }
 
     // 首次使用专业模式：明确告知「作答将发送至第三方 API」
     if (showConsent) {
@@ -218,14 +248,116 @@ fun ProScoringPanel(
         }
 
         // ---------- 下方：流式输出窗口 ----------
-        StreamingOutputWindow(hazeState = hazeState, state = state)
+        StreamingOutputWindow(
+            hazeState = hazeState,
+            state = state,
+            savedHint = savedHint,
+            onCopy = copier,
+            onSave = if (state is ProScoringState.Done) {
+                { showSave = true }
+            } else {
+                null
+            },
+        )
+    }
+
+    // ---------- 保存批改 ----------
+    val finishedText = (state as? ProScoringState.Done)?.text.orEmpty()
+
+    fun saveTo(recordId: Long) {
+        val model = bridge.configStore().activeProfile()?.displayName
+        scope.launch {
+            repository.saveAiFeedback(recordId, questionType.name, finishedText, model)
+            showSave = false
+            savedHint = "已保存到这条记录"
+        }
+    }
+
+    fun createNew() {
+        val model = bridge.configStore().activeProfile()?.displayName
+        scope.launch {
+            repository.createAiOnlyRecord(examType, questionType.name, finishedText, model)
+            showSave = false
+            savedHint = "已新建一条批改记录"
+        }
+    }
+
+    if (showSave) {
+        SaveFeedbackDialog(
+            subtitle = "${examType.shortLabel} · ${questionType.label}",
+            records = records,
+            hasSameTask = { repository.decodeFeedback(it).get(questionType.name) != null },
+            onPick = { record ->
+                if (repository.decodeFeedback(record).get(questionType.name) != null) {
+                    // 已有同题型批改，先让用户确认覆盖
+                    pendingOverwrite = record
+                } else {
+                    saveTo(record.id)
+                }
+            },
+            onCreateNew = { createNew() },
+            onDismiss = { showSave = false },
+        )
+    }
+
+    // 覆盖确认
+    pendingOverwrite?.let { record ->
+        AlertDialog(
+            onDismissRequest = { pendingOverwrite = null },
+            title = { Text("覆盖已有批改？", style = MaterialTheme.typography.titleLarge) },
+            text = {
+                Text(
+                    "这条记录已经有${questionType.label}批改了，继续保存会替换掉旧的那一份。",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val target = record
+                    pendingOverwrite = null
+                    saveTo(target.id)
+                }) { Text("覆盖保存") }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingOverwrite = null }) { Text("取消") }
+            },
+            shape = RoundedCornerShape(Dimens.CornerMedium),
+        )
     }
 }
 
-/** 流式输出窗口：可滚动、自动吸底、完成后高亮分数 */
+/**
+ * 流式输出窗口：可滚动、自动吸底、完成后高亮分数。
+ *
+ * @param savedHint 保存结果提示，非空时在底部显示
+ * @param onCopy 复制当前输出内容
+ * @param onSave 保存入口；null 表示当前状态不可保存（仅完成后可保存）
+ */
 @Composable
-private fun StreamingOutputWindow(hazeState: HazeState, state: ProScoringState) {
+private fun StreamingOutputWindow(
+    hazeState: HazeState,
+    state: ProScoringState,
+    savedHint: String?,
+    onCopy: (String) -> Unit,
+    onSave: (() -> Unit)?,
+) {
     val scrollState = rememberScrollState()
+
+    // 复制按钮的"已复制"反馈
+    var copied by remember { mutableStateOf(false) }
+    LaunchedEffect(copied) {
+        if (copied) {
+            delay(1500)
+            copied = false
+        }
+    }
+
+    val copyText = when (state) {
+        is ProScoringState.Running -> state.output
+        is ProScoringState.Done -> state.text
+        is ProScoringState.Failed -> state.partialText
+        ProScoringState.Idle -> ""
+    }
 
     // 自动吸底
     LaunchedEffect(state) {
@@ -254,30 +386,52 @@ private fun StreamingOutputWindow(hazeState: HazeState, state: ProScoringState) 
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            when (state) {
-                is ProScoringState.Running -> Text(
-                    text = state.stage,
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                val (statusLabel, statusColor) = when (state) {
+                    is ProScoringState.Running ->
+                        state.stage to MaterialTheme.colorScheme.primary
+
+                    is ProScoringState.Done ->
+                        "已完成" to Color(0xFF6BA88B)
+
+                    is ProScoringState.Failed ->
+                        "已中断" to Color(0xFFC98A6A)
+
+                    ProScoringState.Idle ->
+                        "待开始" to MaterialTheme.colorScheme.onSurfaceVariant
+                }
+                Text(
+                    text = statusLabel,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = statusColor,
                 )
 
-                is ProScoringState.Done -> Text(
-                    text = "已完成",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF6BA88B),
-                )
-
-                is ProScoringState.Failed -> Text(
-                    text = "已中断",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFFC98A6A),
-                )
-
-                ProScoringState.Idle -> Text(
-                    text = "待开始",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                // 复制按钮：流式过程中也能复制已输出的部分
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(Dimens.CornerSmall))
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                        .clickable(enabled = copyText.isNotEmpty()) {
+                            onCopy(copyText)
+                            copied = true
+                        }
+                        .padding(horizontal = Dimens.SpaceM, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = if (copied) "已复制" else "复制",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (copyText.isEmpty()) {
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        } else if (copied) {
+                            Color(0xFF4A8A6A)
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        },
+                    )
+                }
             }
         }
 
@@ -354,6 +508,35 @@ private fun StreamingOutputWindow(hazeState: HazeState, state: ProScoringState) 
                     }
                 }
             }
+        }
+
+        // ---------- 完成后：保存这次批改 ----------
+        if (onSave != null) {
+            Spacer(Modifier.height(Dimens.SpaceM))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(46.dp)
+                    .clip(RoundedCornerShape(Dimens.CornerMedium))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                    .clickable(onClick = onSave),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "保存这次批改",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+
+        if (savedHint != null) {
+            Spacer(Modifier.height(Dimens.SpaceS))
+            Text(
+                text = savedHint,
+                style = MaterialTheme.typography.labelSmall,
+                color = Color(0xFF4A8A6A),
+            )
         }
     }
 }
@@ -623,4 +806,122 @@ private fun SlotChip(
         )
     }
 }
+
+/**
+ * 保存 AI 批改的选择弹窗。
+ *
+ * 两条路：挂到已有估分记录上，或单独新建一条只有批改的记录
+ * （新建时分数与题组明细都留空，历史页会标为「仅批改」）。
+ */
+@Composable
+private fun SaveFeedbackDialog(
+    subtitle: String,
+    records: List<ExamRecord>,
+    hasSameTask: (ExamRecord) -> Boolean,
+    onPick: (ExamRecord) -> Unit,
+    onCreateNew: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val recent = records.take(10)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("保存 AI 批改", style = MaterialTheme.typography.titleLarge) },
+        text = {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 460.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS),
+            ) {
+                Text(
+                    text = "这份批改：$subtitle",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                Text(
+                    text = "保存到已有记录",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+
+                if (recent.isEmpty()) {
+                    Text(
+                        text = "还没有估分记录。可以点右下角新建一条，只存这次批改。",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    recent.forEach { record ->
+                        RecordPickRow(
+                            record = record,
+                            alreadyHas = hasSameTask(record),
+                            onClick = { onPick(record) },
+                        )
+                    }
+                    if (records.size > recent.size) {
+                        Text(
+                            text = "只显示最近 ${recent.size} 条",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onCreateNew) { Text("新建一条记录") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("取消") }
+        },
+        shape = RoundedCornerShape(Dimens.CornerMedium),
+    )
+}
+
+/** 保存弹窗里的一行记录 */
+@Composable
+private fun RecordPickRow(
+    record: ExamRecord,
+    alreadyHas: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(Dimens.CornerSmall))
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = Dimens.SpaceM, vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = "${ExamType.fromName(record.examType).shortLabel} · ${formatRecordTime(record.createdAt)}",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            if (alreadyHas) {
+                Text(
+                    text = "已有同题型批改",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFFC98A6A),
+                )
+            }
+        }
+        Text(
+            text = if (record.isAiOnly) "仅批改" else "${record.totalScore} 分",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** 保存弹窗里的时间格式：短一点，避免一行放不下 */
+private fun formatRecordTime(timestamp: Long): String =
+    java.text.SimpleDateFormat("MM-dd HH:mm", java.util.Locale.getDefault())
+        .format(java.util.Date(timestamp))
+
 

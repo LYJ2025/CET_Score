@@ -241,6 +241,10 @@ fun AppNavHost(
                     ProScoringPanel(
                         hazeState = hazeState,
                         bridge = proBridge,
+                        repository = repositoryProvider(),
+                        // 第三屏必然已有级别与题型；万一为空则兜底，避免保存时崩溃
+                        examType = uiState.examType ?: ExamType.CET4,
+                        questionType = uiState.questionType ?: QuestionType.WRITING,
                         templateBody = uiState.templateBody,
                         question = uiState.question,
                         answer = uiState.answer,
@@ -266,6 +270,10 @@ fun AppNavHost(
                 onEditNote = vm::onEditNote,
                 onDismissNoteDialog = vm::onDismissNoteDialog,
                 onUpdateNote = vm::onUpdateNote,
+                onEditFeedback = vm::onEditFeedback,
+                onDismissFeedbackEdit = vm::onDismissFeedbackEdit,
+                onUpdateFeedback = vm::onUpdateFeedback,
+                onRemoveFeedback = vm::onRemoveFeedback,
                 onDelete = vm::onDelete,
             )
         }

@@ -3,6 +3,7 @@ package com.cetscore.feature.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cetscore.core.data.entity.ExamRecord
+import com.cetscore.core.data.model.AiFeedbackEntry
 import com.cetscore.core.data.repository.ExamRecordRepository
 import com.cetscore.score.domain.model.ExamConfig
 import com.cetscore.score.domain.model.ExamType
@@ -23,6 +24,14 @@ enum class HistoryFilter(val label: String) {
     CET6("六级"),
 }
 
+/** 正在编辑哪一条记录的哪一段 AI 批改 */
+data class FeedbackEditTarget(
+    val recordId: Long,
+    val task: String,
+    /** 题型的中文名，用于标题 */
+    val taskLabel: String,
+)
+
 /** 历史页 UI 状态 */
 data class HistoryUiState(
     val filter: HistoryFilter = HistoryFilter.ALL,
@@ -42,6 +51,12 @@ data class HistoryUiState(
      *  - 该记录是早期版本存的，detailJson 里没有题组明细
      */
     val detailResult: ScoreResult? = null,
+    /** 正在编辑的 AI 批改 */
+    val editingFeedback: FeedbackEditTarget? = null,
+    /** 上面那段批改的当前内容，用于填充编辑框 */
+    val editingFeedbackText: String = "",
+    /** 详情里那条记录的批改，按题型分组（作文在前） */
+    val detailFeedbacks: List<Pair<String, AiFeedbackEntry>> = emptyList(),
 ) {
     val isEmpty: Boolean get() = !isLoading && records.isEmpty()
 
@@ -64,6 +79,7 @@ class HistoryViewModel(
 
     private val _editingNoteId = MutableStateFlow<Long?>(null)
     private val _detailRecordId = MutableStateFlow<Long?>(null)
+    private val _editingFeedback = MutableStateFlow<FeedbackEditTarget?>(null)
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<HistoryUiState> = combine(
@@ -71,7 +87,8 @@ class HistoryViewModel(
         repository.getAllRecords(),
         _editingNoteId,
         _detailRecordId,
-    ) { filter, all, editingId, detailId ->
+        _editingFeedback,
+    ) { filter, all, editingId, detailId, feedbackTarget ->
         val filtered = when (filter) {
             HistoryFilter.ALL -> all
             HistoryFilter.CET4 -> all.filter { it.examType == ExamType.CET4.name }
@@ -79,6 +96,12 @@ class HistoryViewModel(
         }
         // 详情可能来自被筛选掉的记录（例如先看详情再切筛选），所以从全量里找
         val detailRecord = detailId?.let { id -> all.firstOrNull { it.id == id } }
+
+        val feedbackText = feedbackTarget?.let { target ->
+            all.firstOrNull { it.id == target.recordId }
+                ?.let { repository.decodeFeedback(it).get(target.task)?.text }
+        }.orEmpty()
+
         HistoryUiState(
             filter = filter,
             records = filtered,
@@ -87,12 +110,26 @@ class HistoryViewModel(
             detailRecordId = detailId,
             detailRecord = detailRecord,
             detailResult = detailRecord?.let(::recompute),
+            editingFeedback = feedbackTarget,
+            editingFeedbackText = feedbackText,
+            detailFeedbacks = detailRecord?.let(::feedbacksOf).orEmpty(),
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = HistoryUiState(),
     )
+
+    /** 详情里要展示的批改，作文在前 */
+    private fun feedbacksOf(record: ExamRecord): List<Pair<String, AiFeedbackEntry>> {
+        val set = repository.decodeFeedback(record)
+        val order = listOf("WRITING", "TRANSLATION")
+        val known = order.mapNotNull { key -> set.get(key)?.let { key to it } }
+        val others = set.entries
+            .filterKeys { it !in order }
+            .map { it.key to it.value }
+        return known + others
+    }
 
     /**
      * 用保存时的 detailJson 重新跑一遍计算器。
@@ -149,12 +186,56 @@ class HistoryViewModel(
         }
     }
 
+    // ---------- AI 批改 ----------
+
+    /** 在详情面板里点「编辑」：保留详情，弹窗浮在上面，保存后详情自动刷新 */
+    fun onEditFeedback(recordId: Long, task: String) {
+        _editingFeedback.value = FeedbackEditTarget(
+            recordId = recordId,
+            task = task,
+            taskLabel = if (task == "TRANSLATION") "翻译" else "作文",
+        )
+    }
+
+    fun onDismissFeedbackEdit() {
+        _editingFeedback.value = null
+    }
+
+    /**
+     * 保存手动修改后的批改内容。
+     *
+     * 清空内容视为删除这一段批改；保留原模型名，避免"编辑一次就变成未知模型"。
+     */
+    fun onUpdateFeedback(text: String) {
+        val target = _editingFeedback.value ?: return
+        viewModelScope.launch {
+            val trimmed = text.trim()
+            if (trimmed.isEmpty()) {
+                repository.removeAiFeedback(target.recordId, target.task)
+            } else {
+                val record = repository.getById(target.recordId)
+                val model = record?.let {
+                    repository.decodeFeedback(it).get(target.task)?.model
+                }
+                repository.saveAiFeedback(target.recordId, target.task, trimmed, model)
+            }
+            _editingFeedback.value = null
+        }
+    }
+
+    fun onRemoveFeedback(recordId: Long, task: String) {
+        viewModelScope.launch {
+            repository.removeAiFeedback(recordId, task)
+        }
+    }
+
     fun onDelete(id: Long) {
         viewModelScope.launch {
             repository.deleteRecord(id)
             // 若删除的正是正在编辑/查看的记录，关闭对应弹窗
             if (_editingNoteId.value == id) _editingNoteId.value = null
             if (_detailRecordId.value == id) _detailRecordId.value = null
+            if (_editingFeedback.value?.recordId == id) _editingFeedback.value = null
         }
     }
 }
